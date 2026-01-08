@@ -3,7 +3,11 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install Poetry
-RUN pip install poetry
+RUN apt-get update && apt-get install -y curl && \
+    curl -sSL https://install.python-poetry.org | python3 - && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="$HOME/.local/bin:$PATH"
 
 # Copy dependency files
 COPY pyproject.toml poetry.lock* ./

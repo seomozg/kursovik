@@ -113,34 +113,43 @@ fix: handle empty ai response
 
 ---
 
-## 🐳 Docker
+## 🚀 Запуск проекта
 
-### docker-compose.yml (пример)
-```yaml
-version: "3.9"
-
-services:
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-```
-
-### Запуск
+### Docker (рекомендуется)
 ```bash
 docker-compose up --build
+```
+- Backend: http://localhost:8000
+- Frontend: http://localhost:3000
+
+### Локальный запуск
+
+#### Backend
+```bash
+cd backend
+poetry install
+poetry run uvicorn app.main:app --reload
+```
+
+#### Frontend
+```bash
+cd frontend
+npm install
+npm start
+```
+
+### Тестирование
+```bash
+# Backend
+cd backend && poetry run pytest
+
+# Frontend
+cd frontend && npm test
 ```
 
 ---
 
-## 🔐 Переменные окружения
+## � Переменные окружения
 
 `.env`
 ```env
@@ -149,7 +158,7 @@ DEEPSEEK_API_KEY=your_api_key_here
 
 ---
 
-## 📦 Технологии
+## �📦 Технологии
 
 **Backend**
 - Python 3.11+
