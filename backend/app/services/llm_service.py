@@ -1,31 +1,62 @@
-import os
-import httpx
-from typing import Optional
+import asyncio
+from typing import AsyncGenerator
+from .deepseek_utils import get_deepseek_response
+from ..config import STREAMING_DELAY_SECONDS, AI_MAX_TOKENS, AI_TEMPERATURE, OUTLINE_PROMPT_TEMPLATE, ARTICLE_PROMPT_TEMPLATE
 
 
-async def generate_plan(topic: str) -> str:
-    """
-    Генерирует учебный план по заданной теме с помощью DeepSeek API.
-    """
-    api_key = os.getenv("DEEPSEEK_API_KEY")
-    if not api_key:
-        raise ValueError("DEEPSEEK_API_KEY не установлена")
+class LLMService:
+    def __init__(self, api_key: str, base_url: str = "https://api.deepseek.com"):
+        self.api_key = api_key
+        self.base_url = base_url
 
-    prompt = f"Я хочу изучить {topic}. Составь учебный план от начального уровня до профессионального. Раздели на уровни с заголовками."
+    async def generate_outline(self, topic: str) -> str:
+        prompt = OUTLINE_PROMPT_TEMPLATE.format(topic=topic)
+        return await self._generate(prompt)
 
-    url = "https://api.deepseek.com/v1/chat/completions"  # Предполагаемый URL, заменить на реальный
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "model": "deepseek-chat",  # Предполагаемая модель
-        "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": 1000
-    }
+    async def generate_article(self, topic: str, title: str) -> AsyncGenerator[str, None]:
+        prompt = ARTICLE_PROMPT_TEMPLATE.format(topic=topic, title=title)
+        async for chunk in self._generate_stream(prompt):
+            yield chunk
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url, headers=headers, json=data)
-        response.raise_for_status()
-        result = response.json()
-        return result["choices"][0]["message"]["content"].strip()
+    async def generate_outline_stream(self, topic: str) -> AsyncGenerator[str, None]:
+        prompt = OUTLINE_PROMPT_TEMPLATE.format(topic=topic)
+        async for chunk in self._generate_stream(prompt):
+            yield chunk
+
+    async def _generate(self, prompt: str) -> str:
+        print(f"DEBUG: Calling DeepSeek API with prompt: {prompt[:50]}...")
+
+        # Use real DeepSeek API via thread pool
+        try:
+            result = await asyncio.to_thread(
+                get_deepseek_response,
+                prompt,
+                self.api_key,
+                max_tokens=AI_MAX_TOKENS,
+                temperature=AI_TEMPERATURE,
+                stream=False
+            )
+            print(f"DEBUG: API response: {result[:100]}...")
+            return result
+        except Exception as e:
+            print(f"DEBUG: API call failed: {type(e).__name__}: {e}")
+            raise
+
+    async def _generate_stream(self, prompt: str) -> AsyncGenerator[str, None]:
+        # Use real DeepSeek streaming API via deepseek_utils
+        import time
+        import asyncio
+
+        # Get streaming response with updated parameters
+        stream_response = get_deepseek_response(
+            prompt,
+            self.api_key,
+            max_tokens=AI_MAX_TOKENS,
+            temperature=AI_TEMPERATURE,
+            stream=True
+        )
+
+        for chunk in stream_response:
+            yield chunk
+            # Add configurable delay for streaming experience
+            await asyncio.sleep(STREAMING_DELAY_SECONDS)

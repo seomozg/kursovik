@@ -1,1 +1,0 @@
-# Kursovik backend package

@@ -1,10 +1,24 @@
 from fastapi import FastAPI
-from app.api.routes import router
+from fastapi.middleware.cors import CORSMiddleware
+from .api import topics, articles
+from .websocket import router as websocket_router
 
-app = FastAPI(title="Kursovik Backend", description="AI-powered learning service")
+app = FastAPI(title="Kursovik API", version="0.1.0")
 
-app.include_router(router)
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],  # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(topics.router, prefix="/api/topics", tags=["topics"])
+app.include_router(articles.router, prefix="/api/articles", tags=["articles"])
+app.include_router(websocket_router, tags=["websocket"])
+
 
 @app.get("/")
-def read_root():
+async def root():
     return {"message": "Welcome to Kursovik API"}
