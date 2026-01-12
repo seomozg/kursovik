@@ -8,6 +8,7 @@ from .domain.topic import Topic
 from .domain.article import Article, ArticleStatus
 import json
 import urllib.parse
+import base64
 
 router = APIRouter()
 
@@ -69,7 +70,7 @@ async def websocket_article_stream(
         # Send initial status
         await websocket.send_json({
             "status": "generating",
-            "content": "",
+            "content_b64": base64.b64encode("".encode('utf-8')).decode('utf-8'),
             "version": 0
         })
 
@@ -86,9 +87,10 @@ async def websocket_article_stream(
                         if chunk:
                             content_parts.append(chunk)
                             chunk_count += 1
+                            content_b64 = base64.b64encode(''.join(content_parts).encode('utf-8')).decode('utf-8')
                             await websocket.send_json({
                                 "status": "generating",
-                                "content": ''.join(content_parts),
+                                "content_b64": content_b64,
                                 "version": chunk_count
                             })
                 else:
@@ -97,9 +99,10 @@ async def websocket_article_stream(
                         if chunk:
                             content_parts.append(chunk)
                             chunk_count += 1
+                            content_b64 = base64.b64encode(''.join(content_parts).encode('utf-8')).decode('utf-8')
                             await websocket.send_json({
                                 "status": "generating",
-                                "content": ''.join(content_parts),
+                                "content_b64": content_b64,
                                 "version": chunk_count
                             })
 
@@ -152,9 +155,10 @@ async def websocket_article_stream(
                     article.version = chunk_count + 1
                     db.commit()
 
+                    content_b64 = base64.b64encode(final_content.encode('utf-8')).decode('utf-8')
                     await websocket.send_json({
                         "status": "ready",
-                        "content": final_content,
+                        "content_b64": content_b64,
                         "version": chunk_count + 1
                     })
 
@@ -182,3 +186,4 @@ async def websocket_article_stream(
             await websocket.close()
         except:
             pass
+            await websocket.close()

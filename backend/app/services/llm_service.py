@@ -44,19 +44,23 @@ class LLMService:
 
     async def _generate_stream(self, prompt: str) -> AsyncGenerator[str, None]:
         # Use real DeepSeek streaming API via deepseek_utils
-        import time
         import asyncio
 
-        # Get streaming response with updated parameters
-        stream_response = get_deepseek_response(
-            prompt,
-            self.api_key,
-            max_tokens=AI_MAX_TOKENS,
-            temperature=AI_TEMPERATURE,
-            stream=True
-        )
+        # Get streaming response with updated parameters using thread pool
+        try:
+            stream_response = await asyncio.to_thread(
+                get_deepseek_response,
+                prompt,
+                self.api_key,
+                max_tokens=AI_MAX_TOKENS,
+                temperature=AI_TEMPERATURE,
+                stream=True
+            )
 
-        for chunk in stream_response:
-            yield chunk
-            # Add configurable delay for streaming experience
-            await asyncio.sleep(STREAMING_DELAY_SECONDS)
+            for chunk in stream_response:
+                yield chunk
+                # Add configurable delay for streaming experience
+                await asyncio.sleep(STREAMING_DELAY_SECONDS)
+        except Exception as e:
+            print(f"DEBUG: Streaming failed: {type(e).__name__}: {e}")
+            yield f"Ошибка стриминга: {str(e)}"
