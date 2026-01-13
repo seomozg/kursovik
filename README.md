@@ -174,6 +174,67 @@ kursovik/
 
 ---
 
+## 🚀 Запуск с Docker
+
+### Требования
+- Docker и Docker Compose
+- DeepSeek API ключ
+
+### Быстрый старт
+
+1. **Клонируйте репозиторий:**
+   ```bash
+   git clone https://github.com/seomozg/kursovik.git
+   cd kursovik
+   ```
+
+2. **Создайте файл окружения:**
+   ```bash
+   cp .env.example .env
+   # Отредактируйте .env и укажите ваш DEEPSEEK_API_KEY
+   ```
+
+3. **Запустите приложение:**
+   ```bash
+   docker-compose up --build
+   ```
+
+4. **Откройте в браузере:**
+   - Frontend: http://localhost
+   - Backend API: http://localhost:8000
+
+### Структура Docker
+
+- **Backend** (Python + FastAPI):
+  - Порт: 8000
+  - База данных: SQLite (в контейнере)
+  - API для генерации контента
+
+- **Frontend** (React + Nginx):
+  - Порт: 80
+  - Production build с nginx
+  - Статические файлы с кешированием
+
+### Переменные окружения
+
+```bash
+# Обязательные
+DEEPSEEK_API_KEY=ваш_ключ_здесь
+
+# Опциональные
+DATABASE_URL=sqlite:///./backend/kursovik.db
+BACKEND_URL=http://localhost:8000
+FRONTEND_URL=http://localhost:80
+```
+
+### Остановка
+
+```bash
+docker-compose down
+```
+
+---
+
 ## 🐳 Docker
 
 ⚠️ Используется **только в production**.

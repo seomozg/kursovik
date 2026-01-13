@@ -19,6 +19,7 @@ pydantic = "^2.5.0"
 python-multipart = "^0.0.6"
 sse-starlette = "^1.8.2"
 python-dotenv = "^1.0.0"
+websockets = "^16.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"

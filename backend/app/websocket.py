@@ -8,6 +8,7 @@ from .domain.topic import Topic
 from .domain.article import Article, ArticleStatus
 import json
 import urllib.parse
+import base64
 
 router = APIRouter()
 
@@ -44,10 +45,14 @@ async def websocket_article_stream(
 
         article_repo = ArticleRepository(db)
 
-        # Check if this is outline generation (special title)
+        # Check special cases
         is_outline = decoded_step_title == "__OUTLINE__"
+        is_hint = "__HINT__" in decoded_step_title
 
-        if is_outline:
+        if is_hint:
+            # For hints, don't create article in DB
+            article = None
+        elif is_outline:
             # For outlines, create temporary article that will be parsed later
             article = article_repo.create(topic_obj.id, "__OUTLINE__")
         else:
@@ -62,14 +67,17 @@ async def websocket_article_stream(
             else:
                 article = existing_article
 
-        # Store connection
-        connection_key = f"{topic_obj.id}:{article.id}"
-        active_connections[connection_key] = websocket
+        # Store connection (skip for hints)
+        if article:
+            connection_key = f"{topic_obj.id}:{article.id}"
+            active_connections[connection_key] = websocket
+        else:
+            connection_key = None
 
         # Send initial status
         await websocket.send_json({
             "status": "generating",
-            "content": "",
+            "content_b64": base64.b64encode("".encode('utf-8')).decode('utf-8'),
             "version": 0
         })
 
@@ -86,9 +94,10 @@ async def websocket_article_stream(
                         if chunk:
                             content_parts.append(chunk)
                             chunk_count += 1
+                            content_b64 = base64.b64encode(''.join(content_parts).encode('utf-8')).decode('utf-8')
                             await websocket.send_json({
                                 "status": "generating",
-                                "content": ''.join(content_parts),
+                                "content_b64": content_b64,
                                 "version": chunk_count
                             })
                 else:
@@ -97,9 +106,10 @@ async def websocket_article_stream(
                         if chunk:
                             content_parts.append(chunk)
                             chunk_count += 1
+                            content_b64 = base64.b64encode(''.join(content_parts).encode('utf-8')).decode('utf-8')
                             await websocket.send_json({
                                 "status": "generating",
-                                "content": ''.join(content_parts),
+                                "content_b64": content_b64,
                                 "version": chunk_count
                             })
 
@@ -145,16 +155,25 @@ async def websocket_article_stream(
                         "titles": titles,
                         "version": chunk_count + 1
                     })
-                else:
-                    # Save normal article
+                elif not is_hint:
+                    # Save normal article (not outline or hint)
                     article_repo.update_content(article.id, final_content)
                     article_repo.update_status(article.id, ArticleStatus.READY)
                     article.version = chunk_count + 1
                     db.commit()
 
+                    content_b64 = base64.b64encode(final_content.encode('utf-8')).decode('utf-8')
                     await websocket.send_json({
                         "status": "ready",
-                        "content": final_content,
+                        "content_b64": content_b64,
+                        "version": chunk_count + 1
+                    })
+                else:
+                    # For hints, just send content without saving
+                    content_b64 = base64.b64encode(final_content.encode('utf-8')).decode('utf-8')
+                    await websocket.send_json({
+                        "status": "ready",
+                        "content_b64": content_b64,
                         "version": chunk_count + 1
                     })
 
@@ -182,3 +201,4 @@ async def websocket_article_stream(
             await websocket.close()
         except:
             pass
+            await websocket.close()
