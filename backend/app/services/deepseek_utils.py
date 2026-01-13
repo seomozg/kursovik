@@ -6,6 +6,7 @@
 import requests
 import json
 from typing import Optional, Union, Iterator
+import json
 
 
 def get_deepseek_response(
@@ -63,7 +64,8 @@ def get_deepseek_response(
                 result = response.json()
                 return result["choices"][0]["message"]["content"].strip()
         else:
-            error_msg = f"Ошибка API DeepSeek: {response.status_code}"
+            error_msg = f"Ошибка API DeepSeek: {response.status_code} - {response.text}"
+            print(f"DEBUG: DeepSeek API error: {error_msg}")
             if stream:
                 # Для потокового режима возвращаем генератор с ошибкой
                 def error_generator():

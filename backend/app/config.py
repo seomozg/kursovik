@@ -2,7 +2,7 @@
 STREAMING_DELAY_SECONDS = 0.005  # Delay between chunks in LLM service (5ms)
 
 # AI generation parameters
-AI_MAX_TOKENS = 9000  # Maximum tokens for article generation (optimized for DeepSeek API)
+AI_MAX_TOKENS = 4000  # Maximum tokens for article generation (compatible with DeepSeek limits)
 AI_TEMPERATURE = 0.7  # Default temperature for balanced creativity and consistency
 
 # AI Prompts
