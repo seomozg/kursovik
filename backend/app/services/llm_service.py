@@ -14,7 +14,14 @@ class LLMService:
         return await self._generate(prompt)
 
     async def generate_article(self, topic: str, title: str) -> AsyncGenerator[str, None]:
-        prompt = ARTICLE_PROMPT_TEMPLATE.format(topic=topic, title=title)
+        # Handle hints (titles containing __HINT__)
+        if '__HINT__' in title:
+            # Extract the actual hint query from the title
+            hint_query = title.replace('__HINT__', '').replace('__', '')
+            prompt = f"Объясни кратко и понятно в контексте темы '{topic}': {hint_query}"
+        else:
+            prompt = ARTICLE_PROMPT_TEMPLATE.format(topic=topic, title=title)
+
         async for chunk in self._generate_stream(prompt):
             yield chunk
 
