@@ -17,13 +17,20 @@ class LLMService:
         # Handle hints (titles containing __HINT__)
         if '__HINT__' in title:
             # Extract the actual hint query from the title
-            hint_query = title.replace('__HINT__', '').replace('__', '')
-            prompt = f"Объясни кратко и понятно в контексте темы '{topic}': {hint_query}"
+            hint_query = title.replace('__HINT__', '').replace('__', '').strip()
+            # Limit length and clean up special characters that might break API
+            hint_query = hint_query[:500]  # Limit to 500 chars
+            # Remove or escape problematic characters
+            hint_query = hint_query.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
+            # Escape quotes to prevent JSON issues
+            hint_query = hint_query.replace('"', '\\"').replace("'", "\\'")
+            prompt = f"Объясни кратко и понятно в контексте темы {topic}: {hint_query}"
+            async for chunk in self._generate_stream(prompt, is_hint=True):
+                yield chunk
         else:
             prompt = ARTICLE_PROMPT_TEMPLATE.format(topic=topic, title=title)
-
-        async for chunk in self._generate_stream(prompt):
-            yield chunk
+            async for chunk in self._generate_stream(prompt):
+                yield chunk
 
     async def generate_outline_stream(self, topic: str) -> AsyncGenerator[str, None]:
         prompt = OUTLINE_PROMPT_TEMPLATE.format(topic=topic)
@@ -49,9 +56,12 @@ class LLMService:
             print(f"DEBUG: API call failed: {type(e).__name__}: {e}")
             raise
 
-    async def _generate_stream(self, prompt: str) -> AsyncGenerator[str, None]:
+    async def _generate_stream(self, prompt: str, is_hint: bool = False) -> AsyncGenerator[str, None]:
         # Use real DeepSeek streaming API via deepseek_utils
         import asyncio
+
+        # Use smaller max_tokens for hints
+        max_tokens = 1000 if is_hint else AI_MAX_TOKENS
 
         # Get streaming response with updated parameters using thread pool
         try:
@@ -59,7 +69,7 @@ class LLMService:
                 get_deepseek_response,
                 prompt,
                 self.api_key,
-                max_tokens=AI_MAX_TOKENS,
+                max_tokens=max_tokens,
                 temperature=AI_TEMPERATURE,
                 stream=True
             )
