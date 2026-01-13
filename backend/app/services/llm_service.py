@@ -1,7 +1,7 @@
 import asyncio
 from typing import AsyncGenerator
 from .deepseek_utils import get_deepseek_response
-from ..config import STREAMING_DELAY_SECONDS, AI_MAX_TOKENS, AI_TEMPERATURE, OUTLINE_PROMPT_TEMPLATE, ARTICLE_PROMPT_TEMPLATE, HINT_PROMPT_TEMPLATE
+from ..config import STREAMING_DELAY_SECONDS, AI_MAX_TOKENS, HINT_MAX_TOKENS, AI_TEMPERATURE, OUTLINE_PROMPT_TEMPLATE, ARTICLE_PROMPT_TEMPLATE, HINT_PROMPT_TEMPLATE
 
 
 class LLMService:
@@ -10,8 +10,8 @@ class LLMService:
         self.base_url = base_url
 
     def _escape_for_json(self, text: str) -> str:
-        """Escape quotes to prevent JSON issues in API requests"""
-        return text.replace('"', '\\"').replace("'", "\\'")
+        """Escape special characters to prevent issues in API requests"""
+        return text.replace('\\', '\\\\').replace('"', '\\"').replace('`', '\\`')
 
     async def generate_outline(self, topic: str) -> str:
         # Escape quotes to prevent JSON issues
@@ -35,7 +35,9 @@ class LLMService:
             title_escaped = self._escape_for_json(title)
             prompt = ARTICLE_PROMPT_TEMPLATE.format(topic=topic_escaped, title=title_escaped)
 
-        async for chunk in self._generate_stream(prompt):
+        # Use different max tokens for hints
+        max_tokens = HINT_MAX_TOKENS if '__HINT__' in title else AI_MAX_TOKENS
+        async for chunk in self._generate_stream(prompt, max_tokens):
             yield chunk
 
     async def generate_outline_stream(self, topic: str) -> AsyncGenerator[str, None]:
@@ -62,7 +64,7 @@ class LLMService:
             print(f"DEBUG: API call failed: {type(e).__name__}: {e}")
             raise
 
-    async def _generate_stream(self, prompt: str) -> AsyncGenerator[str, None]:
+    async def _generate_stream(self, prompt: str, max_tokens: int = AI_MAX_TOKENS) -> AsyncGenerator[str, None]:
         # Use real DeepSeek streaming API via deepseek_utils
         import asyncio
 
@@ -72,7 +74,7 @@ class LLMService:
                 get_deepseek_response,
                 prompt,
                 self.api_key,
-                max_tokens=AI_MAX_TOKENS,
+                max_tokens=max_tokens,
                 temperature=AI_TEMPERATURE,
                 stream=True
             )

@@ -98,7 +98,7 @@ def _process_stream_response(response: requests.Response) -> Iterator[str]:
     try:
         for line in response.iter_lines():
             if line:
-                line = line.decode('utf-8')
+                line = line.decode('utf-8', errors='replace')
                 if line.startswith('data: '):
                     data = line[6:]
                     if data == '[DONE]':
