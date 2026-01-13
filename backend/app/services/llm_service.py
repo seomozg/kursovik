@@ -9,8 +9,14 @@ class LLMService:
         self.api_key = api_key
         self.base_url = base_url
 
+    def _escape_for_json(self, text: str) -> str:
+        """Escape quotes to prevent JSON issues in API requests"""
+        return text.replace('"', '\\"').replace("'", "\\'")
+
     async def generate_outline(self, topic: str) -> str:
-        prompt = OUTLINE_PROMPT_TEMPLATE.format(topic=topic)
+        # Escape quotes to prevent JSON issues
+        topic_clean = self._escape_for_json(topic)
+        prompt = OUTLINE_PROMPT_TEMPLATE.format(topic=topic_clean)
         return await self._generate(prompt)
 
     async def generate_article(self, topic: str, title: str) -> AsyncGenerator[str, None]:
@@ -18,11 +24,16 @@ class LLMService:
         if '__HINT__' in title:
             # Extract the actual hint query from the title
             hint_query = title.replace('__HINT__', '').replace('__', '')
-            prompt = f"Объясни кратко и понятно в контексте темы '{topic}': {hint_query}"
+            topic_escaped = self._escape_for_json(topic)
+            hint_query_escaped = self._escape_for_json(hint_query)
+            prompt = f"Объясни кратко и понятно в контексте темы '{topic_escaped}': {hint_query_escaped}"
         elif '__OUTLINE__' in title:
-            prompt = OUTLINE_PROMPT_TEMPLATE.format(topic=topic)
+            topic_escaped = self._escape_for_json(topic)
+            prompt = OUTLINE_PROMPT_TEMPLATE.format(topic=topic_escaped)
         else:
-            prompt = ARTICLE_PROMPT_TEMPLATE.format(topic=topic, title=title)
+            topic_escaped = self._escape_for_json(topic)
+            title_escaped = self._escape_for_json(title)
+            prompt = ARTICLE_PROMPT_TEMPLATE.format(topic=topic_escaped, title=title_escaped)
 
         async for chunk in self._generate_stream(prompt):
             yield chunk
