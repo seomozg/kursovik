@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     ports:
-      - "8000:8000"
+      - "8080:8000"
     environment:
       - DATABASE_URL=sqlite:///./kursovik.db
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
