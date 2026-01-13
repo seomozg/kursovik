@@ -14,11 +14,13 @@ class LLMService:
         return await self._generate(prompt)
 
     async def generate_article(self, topic: str, title: str) -> AsyncGenerator[str, None]:
-        # Handle hints (titles containing __HINT__)
+        # Handle special cases
         if '__HINT__' in title:
             # Extract the actual hint query from the title
             hint_query = title.replace('__HINT__', '').replace('__', '')
             prompt = f"Объясни кратко и понятно в контексте темы '{topic}': {hint_query}"
+        elif '__OUTLINE__' in title:
+            prompt = OUTLINE_PROMPT_TEMPLATE.format(topic=topic)
         else:
             prompt = ARTICLE_PROMPT_TEMPLATE.format(topic=topic, title=title)
 
