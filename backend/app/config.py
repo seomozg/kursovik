@@ -20,6 +20,8 @@ ARTICLE_PROMPT_TEMPLATE = """Я хочу изучить {topic}. Напиши и
 Используй строгую структуру: заголовки + контент. Не используй подзаголовки, только заголовки 1-го уровня.
 """
 
+HINT_PROMPT_TEMPLATE = """Объясни кратко и понятно в контексте темы "{topic}": {hint_query}"""
+
 # Polling intervals for outline loading
 OUTLINE_POLLING_INTERVAL_MS = 200  # Frontend polling interval for outlines (200ms)
 

@@ -1,7 +1,7 @@
 import asyncio
 from typing import AsyncGenerator
 from .deepseek_utils import get_deepseek_response
-from ..config import STREAMING_DELAY_SECONDS, AI_MAX_TOKENS, AI_TEMPERATURE, OUTLINE_PROMPT_TEMPLATE, ARTICLE_PROMPT_TEMPLATE
+from ..config import STREAMING_DELAY_SECONDS, AI_MAX_TOKENS, AI_TEMPERATURE, OUTLINE_PROMPT_TEMPLATE, ARTICLE_PROMPT_TEMPLATE, HINT_PROMPT_TEMPLATE
 
 
 class LLMService:
@@ -26,7 +26,7 @@ class LLMService:
             hint_query = title.replace('__HINT__', '').replace('__', '')
             topic_escaped = self._escape_for_json(topic)
             hint_query_escaped = self._escape_for_json(hint_query)
-            prompt = f"Объясни кратко и понятно в контексте темы '{topic_escaped}': {hint_query_escaped}"
+            prompt = HINT_PROMPT_TEMPLATE.format(topic=topic_escaped, hint_query=hint_query_escaped)
         elif '__OUTLINE__' in title:
             topic_escaped = self._escape_for_json(topic)
             prompt = OUTLINE_PROMPT_TEMPLATE.format(topic=topic_escaped)
