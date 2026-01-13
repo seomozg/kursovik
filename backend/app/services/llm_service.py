@@ -11,7 +11,7 @@ class LLMService:
 
     def _escape_for_json(self, text: str) -> str:
         """Escape special characters to prevent issues in API requests"""
-        return text.replace('\\', '\\\\').replace('"', '\\"').replace('`', '\\`')
+        return text.replace('\\', '\\\\').replace('"', '\\"').replace("'", "\\'").replace('`', '\\`')
 
     async def generate_outline(self, topic: str) -> str:
         # Escape quotes to prevent JSON issues
