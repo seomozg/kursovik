@@ -22,7 +22,8 @@ export const useArticles = (addTopic) => {
     try {
       const encodedTopic = encodeURIComponent(topic);
       const encodedTitle = encodeURIComponent("__OUTLINE__");
-      const wsUrl = `ws://${BACKEND_URL.replace('http://', '')}/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${wsProtocol}//${window.location.host}/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
 
       const ws = new WebSocket(wsUrl);
 
@@ -208,7 +209,8 @@ export const useArticles = (addTopic) => {
 
       const encodedTopic = encodeURIComponent(topicName);
       const encodedTitle = encodeURIComponent(stepTitle);
-      const wsUrl = `ws://${BACKEND_URL.replace('http://', '')}/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${wsProtocol}//${window.location.host}/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
 
       const ws = new WebSocket(wsUrl);
 

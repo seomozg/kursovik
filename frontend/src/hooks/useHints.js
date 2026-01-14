@@ -21,7 +21,12 @@ export const useHints = () => {
 
       const encodedTopic = encodeURIComponent(currentTopic);
       const encodedTitle = encodeURIComponent(`__HINT__${selectedText}__`);
-      const wsUrl = `ws://${BACKEND_URL.replace('http://', '')}/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
+      // For local development, connect directly to backend
+      // For production, use relative WebSocket URL through nginx proxy
+      const isLocalhost = window.location.hostname === 'localhost';
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsHost = isLocalhost ? 'localhost:8082' : window.location.host;
+      const wsUrl = `${wsProtocol}//${wsHost}/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
 
       const ws = new WebSocket(wsUrl);
 
