@@ -8,7 +8,15 @@ app = FastAPI(title="Kursovik API", version="0.1.0")
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],  # React dev server
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:8081",
+        "http://localhost:8083",  # New frontend port
+        # TODO: Add your production domain here, e.g.:
+        # "https://yourdomain.com",
+        # "https://www.yourdomain.com"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
