@@ -11,7 +11,7 @@ services:
       - DATABASE_URL=sqlite:///./kursovik.db
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
     volumes:
-      - ./backend/kursovik.db:/app/kursovik.db
+      - ./backend:/app
     restart: unless-stopped
 
   frontend:
