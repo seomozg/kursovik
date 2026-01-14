@@ -136,7 +136,10 @@ function App() {
           currentArticle={currentArticle}
           forceUpdate={forceUpdate}
           streaming={streaming}
-          onGenerateOutline={() => handleGenerateOutline(topic)}
+          onGenerateOutline={() => {
+            setSelectedTopic(topic);
+            handleGenerateOutline(topic);
+          }}
           onTopicTagClick={(topicName) => { setSelectedTopic(topicName); handleTopicTagClick(topicName); }}
           onRegenerate={(stepTitle) => handleStepClick(stepTitle, selectedTopic, true)}
         />

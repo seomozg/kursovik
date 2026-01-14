@@ -22,8 +22,12 @@ export const useArticles = (addTopic) => {
     try {
       const encodedTopic = encodeURIComponent(topic);
       const encodedTitle = encodeURIComponent("__OUTLINE__");
+      // For local development, connect directly to backend
+      // For production, use relative WebSocket URL through nginx proxy
+      const isLocalhost = window.location.hostname === 'localhost';
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${wsProtocol}//${window.location.host}/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
+      const wsHost = isLocalhost ? 'localhost:8082' : window.location.host;
+      const wsUrl = `${wsProtocol}//${wsHost}/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
 
       const ws = new WebSocket(wsUrl);
 
@@ -55,10 +59,16 @@ export const useArticles = (addTopic) => {
                 for (let i = 0; i < binaryString.length; i++) {
                   bytes[i] = binaryString.charCodeAt(i);
                 }
-                content = new TextDecoder('utf-8').decode(bytes);
+                content = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
               } catch (decodeError) {
                 console.error('Error decoding outline base64 content:', decodeError);
-                content = data.content_b64;
+                // Fallback: try to decode as raw text
+                try {
+                  content = decodeURIComponent(escape(atob(data.content_b64)));
+                } catch (fallbackError) {
+                  console.error('Fallback decoding also failed:', fallbackError);
+                  content = data.content || '';
+                }
               }
             }
             setCurrentArticle({
@@ -209,8 +219,12 @@ export const useArticles = (addTopic) => {
 
       const encodedTopic = encodeURIComponent(topicName);
       const encodedTitle = encodeURIComponent(stepTitle);
+      // For local development, connect directly to backend
+      // For production, use relative WebSocket URL through nginx proxy
+      const isLocalhost = window.location.hostname === 'localhost';
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${wsProtocol}//${window.location.host}/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
+      const wsHost = isLocalhost ? 'localhost:8082' : window.location.host;
+      const wsUrl = `${wsProtocol}//${wsHost}/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
 
       const ws = new WebSocket(wsUrl);
 
@@ -239,10 +253,16 @@ export const useArticles = (addTopic) => {
               for (let i = 0; i < binaryString.length; i++) {
                 bytes[i] = binaryString.charCodeAt(i);
               }
-              content = new TextDecoder('utf-8').decode(bytes);
+              content = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
             } catch (decodeError) {
               console.error('Error decoding base64 content:', decodeError);
-              content = data.content_b64;
+              // Fallback: try to decode as raw text
+              try {
+                content = decodeURIComponent(escape(atob(data.content_b64)));
+              } catch (fallbackError) {
+                console.error('Fallback decoding also failed:', fallbackError);
+                content = data.content || '';
+              }
             }
           }
 

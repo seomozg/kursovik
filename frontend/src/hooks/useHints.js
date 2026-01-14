@@ -54,10 +54,16 @@ export const useHints = () => {
               for (let i = 0; i < binaryString.length; i++) {
                 bytes[i] = binaryString.charCodeAt(i);
               }
-              content = new TextDecoder('utf-8').decode(bytes);
+              content = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
             } catch (decodeError) {
               console.error('Error decoding hint base64:', decodeError);
-              content = data.content_b64;
+              // Fallback: try to decode as raw text
+              try {
+                content = decodeURIComponent(escape(atob(data.content_b64)));
+              } catch (fallbackError) {
+                console.error('Fallback decoding also failed:', fallbackError);
+                content = data.content || '';
+              }
             }
           }
 

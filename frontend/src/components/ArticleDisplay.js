@@ -20,7 +20,8 @@ const ArticleDisplay = ({ article, forceUpdate, onRegenerate }) => {
       if (line.trim().startsWith('```')) {
         if (inCodeBlock) {
           // End of code block
-          processedLines.push(`<pre><code>${codeBlockContent}</code></pre>`);
+          const escapedCodeBlock = codeBlockContent.replace(/`/g, '\\`');
+          processedLines.push(`<pre><code>${escapedCodeBlock}</code></pre>`);
           inCodeBlock = false;
           codeBlockContent = '';
         } else {
@@ -39,12 +40,13 @@ const ArticleDisplay = ({ article, forceUpdate, onRegenerate }) => {
       const headerMatch = line.match(/^#{2,}\s+(.+)$/);
       if (headerMatch) {
         const headerText = headerMatch[1].trim();
+        const escapedHeaderText = headerText.replace(/`/g, '\\`');
         const headerLevel = line.match(/^#+/)[0].length;
         const marginLeft = Math.max(0, (headerLevel - 2) * 20); // Indent based on level
 
         // Create regular header
         const headerHtml = `<h${headerLevel} class="article-header" style="margin-left: ${marginLeft}px; margin-top: 20px; margin-bottom: 10px;">
-          ${'#'.repeat(headerLevel - 1)} ${headerText}
+          ${'#'.repeat(headerLevel - 1)} ${escapedHeaderText}
         </h${headerLevel}>`;
 
         processedLines.push(headerHtml);
@@ -62,11 +64,13 @@ const ArticleDisplay = ({ article, forceUpdate, onRegenerate }) => {
 
       // Handle lists
       if (processedLine.trim().match(/^[-*]\s/)) {
-        currentListItems.push(`<li>${processedLine.trim().substring(2)}</li>`);
+        const itemText = processedLine.trim().substring(2).replace(/`/g, '\\`');
+        currentListItems.push(`<li>${itemText}</li>`);
         continue;
       }
       if (processedLine.trim().match(/^\d+\.\s/)) {
-        currentListItems.push(`<li>${processedLine.trim().replace(/^\d+\.\s/, '')}</li>`);
+        const itemText = processedLine.trim().replace(/^\d+\.\s/, '').replace(/`/g, '\\`');
+        currentListItems.push(`<li>${itemText}</li>`);
         continue;
       }
 
