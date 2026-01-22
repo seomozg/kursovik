@@ -25,13 +25,6 @@ else
     exit 1
 fi
 
-# Build frontend
-echo "📦 Building frontend..."
-cd front
-npm ci
-npm run build
-cd ..
-
 # Build and start services
 echo "🐳 Building and starting Docker services..."
 docker-compose down 2>/dev/null || true
