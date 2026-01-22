@@ -12,10 +12,12 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:8081",
-        "http://localhost:8083",  # New frontend port
-        # TODO: Add your production domain here, e.g.:
-        # "https://yourdomain.com",
-        # "https://www.yourdomain.com"
+        "http://localhost:8083",
+        "http://127.0.0.1:3000",  # Add localhost variations
+        "http://127.0.0.1:3001",
+        "http://0.0.0.0:3000",
+        "http://0.0.0.0:3001",
+        "*",  # Allow all for development
     ],
     allow_credentials=True,
     allow_methods=["*"],

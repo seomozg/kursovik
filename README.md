@@ -174,13 +174,13 @@ kursovik/
 
 ---
 
-## 🚀 Запуск с Docker
+## 🚀 Развертывание
 
 ### Требования
 - Docker и Docker Compose
 - DeepSeek API ключ
 
-### Быстрый старт
+### Быстрый старт (разработка)
 
 1. **Клонируйте репозиторий:**
    ```bash
@@ -201,19 +201,50 @@ kursovik/
 
 4. **Откройте в браузере:**
    - Frontend: http://localhost
-   - Backend API: http://localhost:8000
+   - Backend API: http://localhost:8082
 
-### Структура Docker
+### Автоматическое развертывание
 
+Используйте скрипт развертывания для автоматической подготовки и запуска:
+
+```bash
+# Для разработки
+./deploy.sh
+
+# Для production
+docker-compose -f docker-compose.prod.yml up --build -d
+```
+
+### Структура развертывания
+
+#### Режим разработки
 - **Backend** (Python + FastAPI):
-  - Порт: 8000
-  - База данных: SQLite (в контейнере)
+  - Порт: 8082 (внешний) → 8000 (внутренний)
+  - База данных: SQLite
   - API для генерации контента
 
+- **Frontend** (React + Vite):
+  - Порт: 8083 (внешний) → 80 (внутренний)
+  - Development server с hot reload
+  - Проксирование API запросов
+
+#### Production режим
+- **Nginx** (реверс-прокси):
+  - Порт: 80/443
+  - Статические файлы frontend
+  - Проксирование API к backend
+
+- **Backend** (Python + FastAPI):
+  - Внутренний сервис
+  - Redis для кеширования и блокировок
+
+- **Redis**:
+  - Кеширование
+  - Распределенные блокировки
+
 - **Frontend** (React + Nginx):
-  - Порт: 80
-  - Production build с nginx
-  - Статические файлы с кешированием
+  - Production build
+  - Оптимизированные статические файлы
 
 ### Переменные окружения
 
@@ -221,17 +252,40 @@ kursovik/
 # Обязательные
 DEEPSEEK_API_KEY=ваш_ключ_здесь
 
-# Опциональные
+# Опциональные (разработка)
 DATABASE_URL=sqlite:///./backend/kursovik.db
-BACKEND_URL=http://localhost:8000
-FRONTEND_URL=http://localhost:80
+BACKEND_URL=http://localhost:8082
+FRONTEND_URL=http://localhost:8083
+
+# Опциональные (production)
+REDIS_URL=redis://redis:6379
+DATABASE_URL=postgresql://user:password@postgres:5432/kursovik
 ```
 
-### Остановка
+### Управление приложением
 
 ```bash
+# Остановка
 docker-compose down
+
+# Просмотр логов
+docker-compose logs -f
+
+# Просмотр логов конкретного сервиса
+docker-compose logs -f backend
+
+# Перезапуск сервиса
+docker-compose restart backend
+
+# Очистка (удаление volumes)
+docker-compose down -v
 ```
+
+### Мониторинг
+
+- **Health checks**: Все сервисы имеют автоматические проверки здоровья
+- **Логи**: Централизованное логирование через Docker
+- **Метрики**: Доступны через `/metrics` endpoint (backend)
 
 ---
 
