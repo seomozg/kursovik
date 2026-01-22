@@ -27,16 +27,16 @@ fi
 
 # Build and start services
 echo "🐳 Building and starting Docker services..."
-docker-compose down 2>/dev/null || true
-docker-compose build --no-cache
-docker-compose up -d
+docker compose down 2>/dev/null || true
+docker compose build --no-cache
+docker compose up -d
 
 # Wait for services to be healthy
 echo "⏳ Waiting for services to start..."
 sleep 10
 
 # Check if services are running
-if docker-compose ps | grep -q "Up"; then
+if docker compose ps | grep -q "Up"; then
     echo "✅ Deployment successful!"
     echo ""
     echo "🌐 Frontend: http://localhost"
@@ -44,12 +44,12 @@ if docker-compose ps | grep -q "Up"; then
     echo "📊 Backend Docs: http://localhost:8082/docs"
     echo ""
     echo "To stop the application:"
-    echo "  docker-compose down"
+    echo "  docker compose down"
     echo ""
     echo "To view logs:"
-    echo "  docker-compose logs -f"
+    echo "  docker compose logs -f"
 else
     echo "❌ Deployment failed. Check logs:"
-    docker-compose logs
+    docker compose logs
     exit 1
 fi
