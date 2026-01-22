@@ -11,13 +11,8 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy source code
-COPY src ./src
-COPY public ./public
-COPY index.html ./
-COPY package*.json ./
-COPY tsconfig*.json ./
-COPY vite.config.ts ./
+# Copy source code (from front directory context)
+COPY . .
 
 # Debug: check if utils.ts exists
 RUN echo "=== Checking lib directory ===" && (ls -la /app/src/lib/ 2>/dev/null && echo "lib directory exists") || echo "lib directory not found" && echo "=== Finding utils.ts ===" && (find /app -name "utils.ts" 2>/dev/null && echo "utils.ts found") || echo "utils.ts not found"
