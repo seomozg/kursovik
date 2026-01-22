@@ -4,18 +4,15 @@ import { Button } from "@/components/ui/button";
 import axios from "axios";
 
 // Frontend configuration
-// Use relative URLs when nginx proxies to backend (production)
-// For local development (localhost), use direct backend URL
+// Always use relative URLs - nginx proxies /api/ and /ws/ to backend
+// Only use direct URLs for localhost development
 const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-const BACKEND_URL = isLocalhost ? 'http://localhost:8082' : '';
 
 interface TopicInputProps {
   onGenerate: (topic: string) => void;
   isGenerating: boolean;
   onTopicSelect?: (topic: string) => void;
 }
-
-
 
 const TopicInput = ({ onGenerate, isGenerating, onTopicSelect }: TopicInputProps) => {
   const [topic, setTopic] = useState("");
@@ -26,20 +23,20 @@ const TopicInput = ({ onGenerate, isGenerating, onTopicSelect }: TopicInputProps
     const loadPopularTopics = async () => {
       try {
         setTopicsLoading(true);
-        let url = BACKEND_URL;
-        if (!url || url === '') {
-          url = `${window.location.protocol}//${window.location.hostname}:8082`;
-        }
-        
+
+        // Always use relative URLs for production (nginx proxies)
+        // Only use direct URLs for localhost development
+        const url = isLocalhost ? 'http://localhost:8082' : '';
+
         const response = await axios.get(`${url}/api/topics/`, {
           timeout: 5000,
         });
-        
+
         // Convert to popular topics format
         const topics = response.data.map((t: { name: string }) => ({
           label: t.name,
         }));
-        
+
         setPopularTopics(topics);
       } catch (error) {
         console.error('Error loading popular topics:', error);
