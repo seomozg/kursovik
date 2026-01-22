@@ -17,5 +17,6 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(process.cwd(), "./src"),
     },
+    extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
   },
 }));
