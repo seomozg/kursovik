@@ -1,5 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
-import { BACKEND_URL, HINT_GENERATION_TIMEOUT_MS } from '@/lib/config';
+
+// Frontend configuration
+// Use relative URLs when nginx proxies to backend (production)
+// For local development (localhost), use direct backend URL
+const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+const BACKEND_URL = isLocalhost ? 'http://localhost:8082' : '';
+const HINT_GENERATION_TIMEOUT_MS = 30000; // 30 seconds for hints
 
 export const useHints = () => {
   const [selectedText, setSelectedText] = useState('');
