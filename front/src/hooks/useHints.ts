@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 
 // Frontend configuration
-// Use relative URLs when nginx proxies to backend (production)
-// For local development (localhost), use direct backend URL
+// Always use relative URLs - nginx proxies /api/ and /ws/ to backend
+// Only use direct URLs for localhost development
 const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
 const BACKEND_URL = isLocalhost ? 'http://localhost:8082' : '';
 const HINT_GENERATION_TIMEOUT_MS = 30000; // 30 seconds for hints

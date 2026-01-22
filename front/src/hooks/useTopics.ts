@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 // Frontend configuration
-// Use relative URLs when nginx proxies to backend (production)
-// For local development (localhost), use direct backend URL
+// Always use relative URLs - nginx proxies /api/ and /ws/ to backend
+// Only use direct URLs for localhost development
 const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-const BACKEND_URL = isLocalhost ? 'http://localhost:8082' : '';
 
 export const useTopics = () => {
   const [availableTopics, setAvailableTopics] = useState<string[]>([]);
@@ -18,14 +17,11 @@ export const useTopics = () => {
       try {
         setIsLoading(true);
         setError(null);
-        
-        // Determine the backend URL
-        let url = BACKEND_URL;
-        if (!url || url === '') {
-          // Production: use relative URLs (nginx will proxy to backend)
-          url = '';
-        }
-        
+
+        // Always use relative URLs for production (nginx proxies)
+        // Only use direct URLs for localhost development
+        const url = isLocalhost ? 'http://localhost:8082' : '';
+
         console.log('Loading topics from:', `${url}/api/topics/`);
         const response = await axios.get(`${url}/api/topics/`, {
           timeout: 5000,
