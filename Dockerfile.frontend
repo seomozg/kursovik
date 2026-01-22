@@ -12,7 +12,7 @@ RUN npm ci
 COPY front/ .
 
 # Build the application
-RUN npx vite build --config vite.config.ts --tsconfig tsconfig.app.json
+RUN npx vite build --config vite.config.ts
 
 # Production stage with nginx
 FROM nginx:alpine
