@@ -40,9 +40,13 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
       // For local development, connect directly to backend
       // For production, use relative WebSocket URL through nginx proxy
       const isLocalhost = window.location.hostname === 'localhost';
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsHost = isLocalhost ? 'localhost:8082' : window.location.host;
-      const wsUrl = `${wsProtocol}//${wsHost}/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
+      let wsUrl: string;
+      if (isLocalhost) {
+        wsUrl = `ws://localhost:8082/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
+      } else {
+        // Production: use relative WebSocket URL (nginx will proxy)
+        wsUrl = `/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
+      }
 
       const ws = new WebSocket(wsUrl);
 
@@ -241,9 +245,13 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
       // For local development, connect directly to backend
       // For production, use relative WebSocket URL through nginx proxy
       const isLocalhost = window.location.hostname === 'localhost';
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsHost = isLocalhost ? 'localhost:8082' : window.location.host;
-      const wsUrl = `${wsProtocol}//${wsHost}/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
+      let wsUrl: string;
+      if (isLocalhost) {
+        wsUrl = `ws://localhost:8082/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
+      } else {
+        // Production: use relative WebSocket URL (nginx will proxy)
+        wsUrl = `/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
+      }
 
       const ws = new WebSocket(wsUrl);
 

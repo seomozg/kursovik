@@ -22,8 +22,8 @@ export const useTopics = () => {
         // Determine the backend URL
         let url = BACKEND_URL;
         if (!url || url === '') {
-          // Fallback: use current host with same port as running on
-          url = `${window.location.protocol}//${window.location.hostname}:8082`;
+          // Production: use relative URLs (nginx will proxy to backend)
+          url = '';
         }
         
         console.log('Loading topics from:', `${url}/api/topics/`);
