@@ -20,7 +20,7 @@ COPY tsconfig*.json ./
 COPY vite.config.ts ./
 
 # Debug: check if utils.ts exists
-RUN ls -la /app/src/lib/ 2>/dev/null || echo "lib directory not found" && find /app -name "utils.ts" 2>/dev/null || echo "utils.ts not found"
+RUN echo "=== Checking lib directory ===" && (ls -la /app/src/lib/ 2>/dev/null && echo "lib directory exists") || echo "lib directory not found" && echo "=== Finding utils.ts ===" && (find /app -name "utils.ts" 2>/dev/null && echo "utils.ts found") || echo "utils.ts not found"
 
 # Build the application
 RUN npx vite build --config vite.config.ts
