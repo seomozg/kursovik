@@ -2,7 +2,12 @@ import { useState, useEffect } from "react";
 import { Sparkles, ArrowRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
-import { BACKEND_URL } from "@/lib/config";
+
+// Frontend configuration
+// Use relative URLs when nginx proxies to backend (production)
+// For local development (localhost), use direct backend URL
+const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+const BACKEND_URL = isLocalhost ? 'http://localhost:8082' : '';
 
 interface TopicInputProps {
   onGenerate: (topic: string) => void;
