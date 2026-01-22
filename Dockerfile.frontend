@@ -11,6 +11,9 @@ RUN npm ci
 # Copy source code
 COPY front/ .
 
+# Debug: list files
+RUN ls -la /app/src/lib/
+
 # Build the application
 RUN npx vite build --config vite.config.ts
 
