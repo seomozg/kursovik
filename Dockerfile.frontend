@@ -19,8 +19,8 @@ COPY package*.json ./
 COPY tsconfig*.json ./
 COPY vite.config.ts ./
 
-# Debug: list files
-RUN ls -la /app/ && ls -la /app/src/ && find /app/src -type f -name "*.ts" | head -10
+# Debug: check if utils.ts exists
+RUN ls -la /app/src/lib/ 2>/dev/null || echo "lib directory not found" && find /app -name "utils.ts" 2>/dev/null || echo "utils.ts not found"
 
 # Build the application
 RUN npx vite build --config vite.config.ts
