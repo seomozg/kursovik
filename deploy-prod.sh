@@ -115,24 +115,33 @@ deploy_containers() {
 run_migrations() {
     print_status "Running database migrations..."
 
+    # Show current working directory
+    print_status "Current working directory: $(pwd)"
+
     # Load DATABASE_URL from .env file if it exists
     if [ -f ".env" ]; then
+        print_status ".env file found"
+        # Show all DATABASE_URL lines in .env
+        ENV_DB_URLS=$(grep 'DATABASE_URL' .env)
+        print_status "DATABASE_URL entries in .env: $ENV_DB_URLS"
+
         # Extract DATABASE_URL specifically
         DATABASE_URL_FROM_ENV=$(grep '^DATABASE_URL=' .env | head -1 | cut -d'=' -f2-)
         if [ -n "$DATABASE_URL_FROM_ENV" ]; then
             DATABASE_URL="$DATABASE_URL_FROM_ENV"
-            print_status "Loaded DATABASE_URL from .env file"
+            print_status "Loaded DATABASE_URL from .env file: $DATABASE_URL"
         else
             print_warning "DATABASE_URL not found in .env file, using default"
         fi
     else
-        print_warning ".env file not found"
+        print_warning ".env file not found in $(pwd)"
+        ls -la
     fi
 
     # Set default if not found
     DATABASE_URL="${DATABASE_URL:-postgresql://postgres:changeme123@db:5432/kursovik}"
 
-    print_status "Using DATABASE_URL: $DATABASE_URL"
+    print_status "Final DATABASE_URL: $DATABASE_URL"
 
     # Run Alembic migrations with explicit DATABASE_URL
     $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml exec -T -e DATABASE_URL="$DATABASE_URL" backend alembic upgrade head
