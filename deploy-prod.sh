@@ -115,8 +115,9 @@ deploy_containers() {
 run_migrations() {
     print_status "Running database migrations..."
 
-    # Run Alembic migrations
-    $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml exec -T backend alembic upgrade head
+    # Run Alembic migrations with explicit DATABASE_URL
+    DATABASE_URL="${DATABASE_URL:-postgresql://postgres:changeme123@db:5432/kursovik}" \
+    $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml exec -T -e DATABASE_URL="$DATABASE_URL" backend alembic upgrade head
 
     print_status "Database migrations completed ✓"
 }
