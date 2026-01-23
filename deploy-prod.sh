@@ -117,7 +117,16 @@ run_migrations() {
 
     # Load DATABASE_URL from .env file if it exists
     if [ -f ".env" ]; then
-        export $(grep -v '^#' .env | xargs)
+        # Extract DATABASE_URL specifically
+        DATABASE_URL_FROM_ENV=$(grep '^DATABASE_URL=' .env | head -1 | cut -d'=' -f2-)
+        if [ -n "$DATABASE_URL_FROM_ENV" ]; then
+            DATABASE_URL="$DATABASE_URL_FROM_ENV"
+            print_status "Loaded DATABASE_URL from .env file"
+        else
+            print_warning "DATABASE_URL not found in .env file, using default"
+        fi
+    else
+        print_warning ".env file not found"
     fi
 
     # Set default if not found
