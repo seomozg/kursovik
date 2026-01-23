@@ -81,19 +81,31 @@ setup_environment() {
 deploy_containers() {
     print_status "Building and starting production containers..."
 
+    # Determine which docker compose command to use
+    if docker compose version &> /dev/null; then
+        DOCKER_COMPOSE_CMD="docker compose"
+    elif docker-compose --version &> /dev/null; then
+        DOCKER_COMPOSE_CMD="docker-compose"
+    else
+        print_error "Neither 'docker compose' nor 'docker-compose' found"
+        exit 1
+    fi
+
+    print_status "Using: $DOCKER_COMPOSE_CMD"
+
     # Stop any existing containers
-    docker-compose -f docker-compose.prod.yml down || true
+    $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml down || true
 
     # Build and start containers
-    docker-compose -f docker-compose.prod.yml up -d --build
+    $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml up -d --build
 
     print_status "Waiting for services to start..."
     sleep 30
 
     # Check if services are running
-    if ! docker-compose -f docker-compose.prod.yml ps | grep -q "Up"; then
+    if ! $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml ps | grep -q "Up"; then
         print_error "Some services failed to start. Check logs:"
-        docker-compose -f docker-compose.prod.yml logs
+        $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml logs
         exit 1
     fi
 
@@ -105,7 +117,7 @@ run_migrations() {
     print_status "Running database migrations..."
 
     # Run Alembic migrations
-    docker-compose -f docker-compose.prod.yml exec -T backend alembic upgrade head
+    $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml exec -T backend alembic upgrade head
 
     print_status "Database migrations completed ✓"
 }
@@ -156,23 +168,23 @@ setup_ssl() {
 create_backup_script() {
     print_status "Creating backup script..."
 
-    cat > backup.sh << 'EOF'
+    cat > backup.sh << EOF
 #!/bin/bash
 # Database backup script for Kursovik
 
 BACKUP_DIR="./backups"
-DATE=$(date +%Y%m%d_%H%M%S)
-BACKUP_FILE="$BACKUP_DIR/kursovik_backup_$DATE.sql"
+DATE=\$(date +%Y%m%d_%H%M%S)
+BACKUP_FILE="\$BACKUP_DIR/kursovik_backup_\$DATE.sql"
 
-mkdir -p $BACKUP_DIR
+mkdir -p \$BACKUP_DIR
 
-echo "Creating database backup: $BACKUP_FILE"
-docker-compose -f docker-compose.prod.yml exec -T db pg_dump -U postgres kursovik > $BACKUP_FILE
+echo "Creating database backup: \$BACKUP_FILE"
+$DOCKER_COMPOSE_CMD -f docker-compose.prod.yml exec -T db pg_dump -U postgres kursovik > \$BACKUP_FILE
 
-if [ $? -eq 0 ]; then
-    echo "Backup completed successfully: $BACKUP_FILE"
+if [ \$? -eq 0 ]; then
+    echo "Backup completed successfully: \$BACKUP_FILE"
     # Keep only last 7 backups
-    ls -t $BACKUP_DIR/kursovik_backup_*.sql | tail -n +8 | xargs rm -f 2>/dev/null || true
+    ls -t \$BACKUP_DIR/kursovik_backup_*.sql | tail -n +8 | xargs rm -f 2>/dev/null || true
 else
     echo "Backup failed!"
     exit 1
@@ -209,8 +221,8 @@ main() {
     echo "4. Test the application thoroughly"
     echo ""
     echo "Useful commands:"
-    echo "  docker-compose -f docker-compose.prod.yml logs -f"
-    echo "  docker-compose -f docker-compose.prod.yml restart"
+    echo "  $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml logs -f"
+    echo "  $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml restart"
     echo "  ./backup.sh"
 }
 
