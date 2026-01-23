@@ -115,8 +115,17 @@ deploy_containers() {
 run_migrations() {
     print_status "Running database migrations..."
 
+    # Load DATABASE_URL from .env file if it exists
+    if [ -f ".env" ]; then
+        export $(grep -v '^#' .env | xargs)
+    fi
+
+    # Set default if not found
+    DATABASE_URL="${DATABASE_URL:-postgresql://postgres:changeme123@db:5432/kursovik}"
+
+    print_status "Using DATABASE_URL: $DATABASE_URL"
+
     # Run Alembic migrations with explicit DATABASE_URL
-    DATABASE_URL="${DATABASE_URL:-postgresql://postgres:changeme123@db:5432/kursovik}" \
     $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml exec -T -e DATABASE_URL="$DATABASE_URL" backend alembic upgrade head
 
     print_status "Database migrations completed ✓"
