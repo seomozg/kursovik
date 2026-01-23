@@ -101,10 +101,16 @@ deploy_containers() {
     print_status "Waiting for services to start..."
     sleep 30
 
+    # Check container status
+    print_status "Checking container status..."
+    $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml ps
+
     # Check if services are running
     if ! $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml ps | grep -q "Up"; then
         print_error "Some services failed to start. Check logs:"
         $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml logs
+        print_error "You can also check logs manually with:"
+        print_error "  $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml logs -f"
         exit 1
     fi
 
