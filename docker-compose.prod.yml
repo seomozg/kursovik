@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+    ports:
+      - "8001:8000"  # Expose backend on port 8001 for external nginx
     environment:
       - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:changeme123@db:5432/kursovik}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
@@ -32,7 +34,7 @@ services:
       context: ./front
       dockerfile: ../Dockerfile.frontend
     ports:
-      - "8083:80"
+      - "8083:80"  # Frontend accessible on port 8083
     depends_on:
       - backend
     restart: unless-stopped
@@ -61,21 +63,6 @@ services:
     restart: unless-stopped
     volumes:
       - redis_data:/data
-    networks:
-      - app-network
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./ssl:/etc/ssl/certs
-    depends_on:
-      - frontend
-      - backend
-    restart: unless-stopped
     networks:
       - app-network
 
