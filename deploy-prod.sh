@@ -31,13 +31,22 @@ print_error() {
 check_dependencies() {
     print_status "Checking dependencies..."
 
-    if ! command -v docker &> /dev/null; then
-        print_error "Docker is not installed. Please install Docker first."
+    # Check Docker availability by trying to run it
+    if ! docker --version &> /dev/null; then
+        print_error "Docker is not installed or not accessible. Please install Docker first."
+        print_error "Note: Make sure Docker Desktop is running if you're on Windows/Mac."
         exit 1
     fi
 
-    if ! command -v docker-compose &> /dev/null; then
+    # Check Docker Compose availability
+    if ! docker-compose --version &> /dev/null && ! docker compose version &> /dev/null; then
         print_error "Docker Compose is not installed. Please install Docker Compose first."
+        exit 1
+    fi
+
+    # Test Docker connectivity
+    if ! docker ps &> /dev/null; then
+        print_error "Cannot connect to Docker daemon. Please ensure Docker Desktop is running."
         exit 1
     fi
 
