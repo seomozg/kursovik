@@ -5,7 +5,7 @@ import axios from 'axios';
 // Always use relative URLs - nginx proxies /api/ and /ws/ to backend
 // Only use direct URLs for localhost development
 const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-const BACKEND_URL = isLocalhost ? 'http://localhost:8082' : '';
+const BACKEND_URL = isLocalhost ? 'http://localhost:8000' : '';
 const ARTICLE_GENERATION_TIMEOUT_MS = 300000; // 5 minutes
 const OUTLINE_GENERATION_TIMEOUT_MS = 30000; // 30 seconds
 
@@ -42,7 +42,7 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
       const isLocalhost = window.location.hostname === 'localhost';
       let wsUrl: string;
       if (isLocalhost) {
-        wsUrl = `ws://localhost:8082/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
+        wsUrl = `ws://localhost:8000/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
       } else {
         // Production: use relative WebSocket URL (nginx will proxy)
         wsUrl = `/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
@@ -247,7 +247,7 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
       const isLocalhost = window.location.hostname === 'localhost';
       let wsUrl: string;
       if (isLocalhost) {
-        wsUrl = `ws://localhost:8082/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
+        wsUrl = `ws://localhost:8000/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
       } else {
         // Production: use relative WebSocket URL (nginx will proxy)
         wsUrl = `/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;

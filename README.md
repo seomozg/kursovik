@@ -163,8 +163,40 @@ kursovik/
 
 ## 🗄 Хранение данных
 
-**PostgreSQL** + **SQLAlchemy**  
+**PostgreSQL** + **SQLAlchemy** для production.  
 Для разработки допускается SQLite.
+
+### Миграция на PostgreSQL
+
+Если вы переходите с SQLite на PostgreSQL:
+
+1. **Обновите переменные окружения:**
+   ```bash
+   # В .env файле
+   DATABASE_URL=postgresql://postgres:changeme123@db:5432/kursovik
+   POSTGRES_PASSWORD=changeme123
+   ```
+
+2. **Запустите production окружение:**
+   ```bash
+   docker-compose -f docker-compose.prod.yml up -d db
+   ```
+
+3. **Создайте таблицы в PostgreSQL:**
+   ```bash
+   # В контейнере backend
+   docker-compose -f docker-compose.prod.yml exec backend alembic upgrade head
+   ```
+
+4. **Запустите миграцию данных:**
+   ```bash
+   python migrate_to_postgres.py
+   ```
+
+5. **Перезапустите все сервисы:**
+   ```bash
+   docker-compose -f docker-compose.prod.yml up -d
+   ```
 
 ---
 
@@ -208,11 +240,22 @@ kursovik/
 Используйте скрипт развертывания для автоматической подготовки и запуска:
 
 ```bash
-# Для разработки
-./deploy.sh
+# Для production (полная автоматизация)
+./deploy-prod.sh
 
-# Для production
+# Или вручную:
+# 1. Настроить переменные окружения
+cp .env.example .env
+# Отредактируйте .env файл
+
+# 2. Запустить production
 docker-compose -f docker-compose.prod.yml up --build -d
+
+# 3. Выполнить миграции
+docker-compose -f docker-compose.prod.yml exec backend alembic upgrade head
+
+# 4. Проверить здоровье
+curl http://localhost/health
 ```
 
 ### Структура развертывания
@@ -286,6 +329,53 @@ docker-compose down -v
 - **Health checks**: Все сервисы имеют автоматические проверки здоровья
 - **Логи**: Централизованное логирование через Docker
 - **Метрики**: Доступны через `/metrics` endpoint (backend)
+
+### Production deployment
+
+Для развертывания на сервере:
+
+1. **Подготовьте сервер:**
+   ```bash
+   # Установите Docker и Docker Compose
+   curl -fsSL https://get.docker.com -o get-docker.sh
+   sudo sh get-docker.sh
+   sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+   sudo chmod +x /usr/local/bin/docker-compose
+   ```
+
+2. **Загрузите проект:**
+   ```bash
+   git clone https://github.com/seomozg/kursovik.git
+   cd kursovik
+   ```
+
+3. **Настройте переменные:**
+   ```bash
+   cp .env.example .env
+   # Отредактируйте .env файл с production настройками
+   ```
+
+4. **Запустите развертывание:**
+   ```bash
+   ./deploy-prod.sh
+   ```
+
+5. **Настройте SSL (опционально):**
+   ```bash
+   # Используйте Let's Encrypt
+   sudo certbot certonly --webroot -w /var/www/html -d yourdomain.com
+
+   # Или скопируйте сертификаты в ./ssl/
+   cp nginx.ssl.conf nginx.conf
+   docker-compose -f docker-compose.prod.yml restart nginx
+   ```
+
+### Безопасность
+
+- **Измените пароли** в `.env` файле перед production
+- **Настройте firewall** - откройте только порты 80, 443
+- **Регулярно обновляйте** Docker образы
+- **Мониторьте логи** на предмет подозрительной активности
 
 ---
 

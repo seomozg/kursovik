@@ -26,7 +26,7 @@ const TopicInput = ({ onGenerate, isGenerating, onTopicSelect }: TopicInputProps
 
         // Always use relative URLs for production (nginx proxies)
         // Only use direct URLs for localhost development
-        const url = isLocalhost ? 'http://localhost:8082' : '';
+        const url = isLocalhost ? 'http://localhost:8000' : '';
 
         const response = await axios.get(`${url}/api/topics/`, {
           timeout: 5000,

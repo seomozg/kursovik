@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.pool import QueuePool
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -10,7 +11,21 @@ from .services.lock_service import LockService
 # Database
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./kursovik.db")
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# Configure connection pooling for PostgreSQL
+if SQLALCHEMY_DATABASE_URL.startswith("postgresql"):
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        poolclass=QueuePool,
+        pool_size=10,  # Maximum number of connections in the pool
+        max_overflow=20,  # Maximum number of connections that can be created beyond pool_size
+        pool_timeout=30,  # Timeout for getting a connection from the pool
+        pool_recycle=3600,  # Recycle connections after 1 hour
+        echo=False  # Set to True for SQL debugging
+    )
+else:
+    # SQLite configuration (no pooling needed)
+    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
