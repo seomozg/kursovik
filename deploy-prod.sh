@@ -32,21 +32,31 @@ check_dependencies() {
     print_status "Checking dependencies..."
 
     # Check Docker availability by trying to run it
-    if ! docker --version &> /dev/null; then
+    if ! docker --version >/dev/null 2>&1; then
         print_error "Docker is not installed or not accessible. Please install Docker first."
-        print_error "Note: Make sure Docker Desktop is running if you're on Windows/Mac."
+        print_error "Note: Make sure Docker daemon is running."
         exit 1
     fi
 
-    # Check Docker Compose availability
-    if ! docker-compose --version &> /dev/null && ! docker compose version &> /dev/null; then
+    # Check Docker Compose availability (try both syntaxes)
+    DOCKER_COMPOSE_AVAILABLE=false
+    if docker compose version >/dev/null 2>&1; then
+        DOCKER_COMPOSE_AVAILABLE=true
+        DOCKER_COMPOSE_CMD="docker compose"
+    elif docker-compose --version >/dev/null 2>&1; then
+        DOCKER_COMPOSE_AVAILABLE=true
+        DOCKER_COMPOSE_CMD="docker-compose"
+    fi
+
+    if ! $DOCKER_COMPOSE_AVAILABLE; then
         print_error "Docker Compose is not installed. Please install Docker Compose first."
         exit 1
     fi
 
     # Test Docker connectivity
-    if ! docker ps &> /dev/null; then
-        print_error "Cannot connect to Docker daemon. Please ensure Docker Desktop is running."
+    if ! docker ps >/dev/null 2>&1; then
+        print_error "Cannot connect to Docker daemon. Please ensure Docker daemon is running."
+        print_error "Try: sudo systemctl start docker (Linux) or start Docker Desktop (Windows/Mac)"
         exit 1
     fi
 
@@ -80,17 +90,6 @@ setup_environment() {
 # Build and start production containers
 deploy_containers() {
     print_status "Building and starting production containers..."
-
-    # Determine which docker compose command to use
-    if docker compose version &> /dev/null; then
-        DOCKER_COMPOSE_CMD="docker compose"
-    elif docker-compose --version &> /dev/null; then
-        DOCKER_COMPOSE_CMD="docker-compose"
-    else
-        print_error "Neither 'docker compose' nor 'docker-compose' found"
-        exit 1
-    fi
-
     print_status "Using: $DOCKER_COMPOSE_CMD"
 
     # Stop any existing containers
