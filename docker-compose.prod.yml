@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     ports:
-      - "8001:8000"  # Expose backend on port 8001 for external nginx
+      - "8002:8000"  # Expose backend on port 8002 for external nginx
     environment:
       - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:changeme123@db:5432/kursovik}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
