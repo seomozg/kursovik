@@ -63,9 +63,14 @@ export const useTopics = () => {
     });
   };
 
+  const removeTopic = (topicName: string) => {
+    setAvailableTopics(prev => prev.filter(topic => topic !== topicName));
+  };
+
   return {
     availableTopics,
     addTopic,
+    removeTopic,
     isLoading,
     error
   };

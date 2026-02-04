@@ -189,6 +189,7 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
     } catch (error) {
       console.error('Error loading outline:', error);
       alert('Ошибка при загрузке оглавления для этой темы.');
+      throw error;
     }
   };
 

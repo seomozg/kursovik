@@ -91,7 +91,7 @@ class TestTopicsAPI:
         assert items_by_title["Шаг 2"]["has_content"] is False
 
     def test_delete_topic_content(self, client: TestClient, db: Session):
-        """Test deleting all articles for a topic"""
+        """Test deleting all articles for a topic and the topic itself"""
         topic_repo = TopicRepository(db)
         article_repo = ArticleRepository(db)
 
@@ -105,6 +105,9 @@ class TestTopicsAPI:
 
         remaining = db.query(Article).filter(Article.topic_id == topic.id).all()
         assert remaining == []
+
+        deleted_topic = db.query(Topic).filter(Topic.id == topic.id).first()
+        assert deleted_topic is None
 
     def test_generate_article_websocket_flow(self, client: TestClient, db: Session):
         """Test article generation flow (WebSocket endpoint tested separately)"""

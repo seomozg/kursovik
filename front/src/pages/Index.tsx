@@ -16,7 +16,7 @@ const Index = () => {
   const [selectedArticleTitle, setSelectedArticleTitle] = useState(''); // Track currently selected article
 
   // Use custom hooks
-  const { availableTopics, addTopic, isLoading, error } = useTopics();
+  const { availableTopics, addTopic, removeTopic, isLoading, error } = useTopics();
   const {
     outline,
     outlineTitle,
@@ -136,7 +136,19 @@ const Index = () => {
   const handleTopicTagClickWrapper = async (topicName: string) => {
     setSelectedTopicName(topicName);
     setSelectedArticleTitle(''); // Reset selected article when changing main topic
-    await handleTopicTagClick(topicName);
+    try {
+      await handleTopicTagClick(topicName);
+    } catch (error) {
+      if (error instanceof Error && 'response' in error) {
+        const axiosError = error as any;
+        if (axiosError.response?.status === 404) {
+          removeTopic(topicName);
+          setSelectedTopicName('');
+          setSelectedArticleTitle('');
+        }
+      }
+      throw error;
+    }
   };
 
   // Handle text selection for hints

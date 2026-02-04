@@ -90,6 +90,7 @@ async def delete_topic_content(topic_name: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Topic not found")
 
     deleted_count = db.query(Article).filter(Article.topic_id == topic.id).delete()
+    db.delete(topic)
     db.commit()
 
     return {"topic_id": topic.id, "deleted_count": deleted_count}
