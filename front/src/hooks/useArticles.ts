@@ -152,35 +152,25 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
     }
   };
 
-  const checkGeneratedArticles = async (topicName: string, outlineItems: string[]) => {
+  const checkGeneratedArticles = async (topicName: string) => {
     const generated = new Set<string>();
     const hierarchy: Record<string, string[]> = {};
 
-    for (const item of outlineItems) {
-      try {
-        const encodedTitle = encodeURIComponent(encodeURIComponent(item));
-        const response = await axios.get(`${BACKEND_URL}/api/topics/${encodeURIComponent(topicName)}/${encodedTitle}`);
-        if (response.data.status === 'ready' && response.data.content) {
-          generated.add(item);
-
-          const content = response.data.content;
-          if (content) {
-            const lines = content.split('\n');
-            const subHeaders: string[] = [];
-            for (const line of lines) {
-              const headerMatch = line.match(/^#{2,}\s+(.+)$/);
-              if (headerMatch) {
-                subHeaders.push(headerMatch[1].trim());
-              }
-            }
-            if (subHeaders.length > 0) {
-              hierarchy[item] = subHeaders;
-            }
-          }
+    try {
+      const response = await axios.get(
+        `${BACKEND_URL}/api/topics/${encodeURIComponent(topicName)}/articles-status`
+      );
+      const items = response.data.items || [];
+      for (const item of items) {
+        if (item.status === 'ready' && item.has_content) {
+          generated.add(item.title);
         }
-      } catch (error) {
-        // Article doesn't exist, continue
+        if (item.subheaders && item.subheaders.length > 0) {
+          hierarchy[item.title] = item.subheaders;
+        }
       }
+    } catch (error) {
+      console.error('Error loading article statuses:', error);
     }
 
     setGeneratedArticles(generated);
@@ -195,7 +185,7 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
       const outlineItems = titles.slice(1);
       setOutline(outlineItems);
 
-      await checkGeneratedArticles(topicName, outlineItems);
+      await checkGeneratedArticles(topicName);
     } catch (error) {
       console.error('Error loading outline:', error);
       alert('Ошибка при загрузке оглавления для этой темы.');

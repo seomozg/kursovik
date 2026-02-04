@@ -8,6 +8,7 @@ from ..domain.topic import Topic
 from ..domain.article import Article
 from ..config import ARTICLE_GENERATION_TIMEOUT_MS, OUTLINE_GENERATION_TIMEOUT_MS
 import json
+import re
 
 router = APIRouter()
 
@@ -44,6 +45,38 @@ async def get_topic_outline(topic_name: str, db: Session = Depends(get_db)):
     titles.extend([article.title for article in articles[1:]])  # Steps
 
     return {"topic_id": topic.id, "titles": titles}
+
+
+@router.get("/{topic_name}/articles-status")
+async def get_topic_articles_status(topic_name: str, db: Session = Depends(get_db)):
+    """Get article statuses and subheaders for a topic in a single request"""
+    import urllib.parse
+    decoded_topic_name = urllib.parse.unquote(topic_name)
+
+    topic = db.query(Topic).filter(Topic.name == decoded_topic_name).first()
+    if not topic:
+        raise HTTPException(status_code=404, detail="Topic not found")
+
+    articles = db.query(Article).filter(Article.topic_id == topic.id).order_by(Article.id).all()
+    items = []
+
+    for article in articles:
+        subheaders = []
+        if article.content:
+            for line in article.content.split("\n"):
+                header_match = re.match(r"^#{2,}\s+(.+)$", line)
+                if header_match:
+                    subheaders.append(header_match.group(1).strip())
+
+        items.append({
+            "id": article.id,
+            "title": article.title,
+            "status": article.status,
+            "has_content": bool(article.content),
+            "subheaders": subheaders,
+        })
+
+    return {"topic_id": topic.id, "items": items}
 
 
 @router.get("/{topic_name}/{step_title}")

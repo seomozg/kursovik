@@ -64,6 +64,32 @@ class TestTopicsAPI:
         assert response.status_code == 404
         assert "Topic not found" in response.json()["detail"]
 
+    def test_get_topic_articles_status(self, client: TestClient, db: Session):
+        """Test aggregated article status endpoint"""
+        topic_repo = TopicRepository(db)
+        article_repo = ArticleRepository(db)
+
+        topic = topic_repo.get_or_create("status_topic")
+        outline = article_repo.create(topic.id, "Учебный план")
+        step_ready = article_repo.create(topic.id, "Шаг 1")
+        step_pending = article_repo.create(topic.id, "Шаг 2")
+
+        article_repo.update_status(step_ready.id, ArticleStatus.READY)
+        article_repo.update_content(step_ready.id, "## Подраздел 1\nТекст\n### Подраздел 2")
+
+        response = client.get(f"/api/topics/{topic.name}/articles-status")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert "items" in data
+        items_by_title = {item["title"]: item for item in data["items"]}
+
+        assert items_by_title["Учебный план"]["has_content"] is False
+        assert items_by_title["Шаг 1"]["status"] == ArticleStatus.READY
+        assert items_by_title["Шаг 1"]["has_content"] is True
+        assert items_by_title["Шаг 1"]["subheaders"] == ["Подраздел 1", "Подраздел 2"]
+        assert items_by_title["Шаг 2"]["has_content"] is False
+
     def test_generate_article_websocket_flow(self, client: TestClient, db: Session):
         """Test article generation flow (WebSocket endpoint tested separately)"""
         # Create topic and article first
