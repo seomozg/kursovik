@@ -201,6 +201,11 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
         delete newHierarchy[stepTitle];
         return newHierarchy;
       });
+      setGeneratedArticles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(stepTitle);
+        return newSet;
+      });
     }
 
     setCurrentArticle(null);

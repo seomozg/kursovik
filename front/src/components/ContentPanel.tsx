@@ -160,24 +160,42 @@ const ContentPanel = ({
 
 // Simple markdown-like formatting
 const formatContent = (content: string): string => {
-  return content
+  let formatted = content;
+  const codeBlocks: string[] = [];
+
+  formatted = formatted.replace(/```(\w*)\n([\s\S]*?)```/g, (_, __, code) => {
+    const escaped = code
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
+    codeBlocks.push(`<pre><code>${escaped}</code></pre>`);
+    return placeholder;
+  });
+
+  formatted = formatted
     .replace(/^### (.*$)/gm, '<h3>$1</h3>')
     .replace(/^## (.*$)/gm, '<h2>$1</h2>')
     .replace(/^# (.*$)/gm, '<h1>$1</h1>')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
     .replace(/^- (.*$)/gm, '<li>$1</li>')
     .replace(/(<li>.*<\/li>)\n(?=<li>)/g, '$1')
     .replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>')
     .replace(/<\/ul>\n<ul>/g, '')
     .replace(/\n\n/g, '</p><p>')
-    .replace(/^(?!<[huplo])/gm, '<p>')
+    .replace(/^(?!<[huplo_])/gm, '<p>')
     .replace(/(?<![>\n])$/gm, '</p>')
     .replace(/<p><\/p>/g, '')
-    .replace(/<p>(<[huplo])/g, '$1')
+    .replace(/<p>(<[huplo_])/g, '$1')
     .replace(/(<\/[huplo][^>]*>)<\/p>/g, '$1');
+
+  codeBlocks.forEach((block, index) => {
+    formatted = formatted.replace(`__CODE_BLOCK_${index}__`, block);
+  });
+
+  return formatted;
 };
 
 export default ContentPanel;
