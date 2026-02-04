@@ -90,6 +90,22 @@ class TestTopicsAPI:
         assert items_by_title["Шаг 1"]["subheaders"] == ["Подраздел 1", "Подраздел 2"]
         assert items_by_title["Шаг 2"]["has_content"] is False
 
+    def test_delete_topic_content(self, client: TestClient, db: Session):
+        """Test deleting all articles for a topic"""
+        topic_repo = TopicRepository(db)
+        article_repo = ArticleRepository(db)
+
+        topic = topic_repo.get_or_create("delete_topic")
+        article_repo.create(topic.id, "Учебный план")
+        article_repo.create(topic.id, "Шаг 1")
+
+        response = client.delete(f"/api/topics/{topic.name}/content")
+        assert response.status_code == 200
+        assert response.json()["deleted_count"] == 2
+
+        remaining = db.query(Article).filter(Article.topic_id == topic.id).all()
+        assert remaining == []
+
     def test_generate_article_websocket_flow(self, client: TestClient, db: Session):
         """Test article generation flow (WebSocket endpoint tested separately)"""
         # Create topic and article first

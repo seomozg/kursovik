@@ -68,9 +68,23 @@ const Index = () => {
   const selectedLevelId = selectedTopicId ? 'level-1' : null;
 
   const handleGenerate = async (topicInput: string) => {
-    setSelectedTopicName(topicInput);
+    const normalizedInput = topicInput.trim();
+    if (!normalizedInput) {
+      return;
+    }
+
+    const existingTopic = availableTopics.find(
+      (topicName) => topicName.toLowerCase() === normalizedInput.toLowerCase()
+    );
+
+    if (existingTopic) {
+      await handleTopicTagClickWrapper(existingTopic);
+      return;
+    }
+
+    setSelectedTopicName(normalizedInput);
     setSelectedArticleTitle(''); // Reset selected article when generating new outline
-    await handleGenerateOutline(topicInput);
+    await handleGenerateOutline(normalizedInput);
   };
 
   const handleSelectTopic = async (levelId: string, topicId: string) => {

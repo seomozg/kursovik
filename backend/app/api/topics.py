@@ -79,6 +79,22 @@ async def get_topic_articles_status(topic_name: str, db: Session = Depends(get_d
     return {"topic_id": topic.id, "items": items}
 
 
+@router.delete("/{topic_name}/content")
+async def delete_topic_content(topic_name: str, db: Session = Depends(get_db)):
+    """Delete all articles for a topic (service endpoint)."""
+    import urllib.parse
+    decoded_topic_name = urllib.parse.unquote(topic_name)
+
+    topic = db.query(Topic).filter(Topic.name == decoded_topic_name).first()
+    if not topic:
+        raise HTTPException(status_code=404, detail="Topic not found")
+
+    deleted_count = db.query(Article).filter(Article.topic_id == topic.id).delete()
+    db.commit()
+
+    return {"topic_id": topic.id, "deleted_count": deleted_count}
+
+
 @router.get("/{topic_name}/{step_title}")
 async def get_topic_step_article(topic_name: str, step_title: str, db: Session = Depends(get_db)):
     """Get article for a specific step in a topic"""
