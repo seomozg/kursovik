@@ -11,6 +11,10 @@ services:
       - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:changeme123@db:5432/kursovik}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+    extra_hosts:
+      # Emergency fix: resolved edge for api.deepseek.com (3.173.21.63) is
+      # unreachable from this host; pin a working CloudFront edge IP.
+      - "api.deepseek.com:3.164.235.171"
     volumes:
       - ./backend:/app
       - ./data:/app/data
