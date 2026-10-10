@@ -56,6 +56,24 @@ DELETE /api/topics/{topic}/content
 
 > Используйте осторожно: удаляет все статьи (включая оглавление) для указанной темы.
 
+### DeepSeek connectivity watchdog (server-side)
+
+На прод-сервере edge CloudFront, в который резолвится `api.deepseek.com`, бывает
+недоступен из-за деградации маршрута. Для авто-восстановления используется
+скрипт `deploy/deepseek-watchdog.sh` (устанавливается в
+`/usr/local/bin/deepseek-watchdog.sh`, cron каждые 5 минут):
+
+- проверяет текущий пин в `/etc/hosts` (любой HTTP-ответ + быстрый коннект `< 3с`
+  отбрасывает флапающие/битые edge);
+- при смерти пина ищет рабочий edge динамически (публичный DNS, DoH,
+  случайная выборка из `ip-ranges.amazonaws.com`) — **IP нигде не захардкожен**;
+- обновляет `/etc/hosts` на хосте и синхронизирует пин во все запущенные
+  docker-контейнеры (инъекция строки `IP api.deepseek.com`);
+- лог: `/var/log/deepseek-watchdog.log`, состояние: `/var/lib/deepseek-watchdog/state`.
+
+Ручная проверка: `FORCE_DEAD=1 /usr/local/bin/deepseek-watchdog.sh` (симулирует
+смерть пина и прогоняет discovery).
+
 ---
 
 ## 🧠 Workflow генерации контента
