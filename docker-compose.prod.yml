@@ -2,6 +2,9 @@ version: '3.8'
 
 services:
   backend:
+    dns:
+      - 172.17.0.1
+      - 198.18.18.18
     build:
       context: .
       dockerfile: Dockerfile.backend
