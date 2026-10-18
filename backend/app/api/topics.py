@@ -9,6 +9,8 @@ from ..domain.article import Article
 from ..config import ARTICLE_GENERATION_TIMEOUT_MS, OUTLINE_GENERATION_TIMEOUT_MS
 import json
 import re
+import logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -139,7 +141,7 @@ async def generate_outline(
     import urllib.parse
     # Decode URL-encoded topic name
     decoded_topic_name = urllib.parse.unquote(topic_name)
-    print(f"DEBUG: Original topic_name: '{topic_name}', decoded: '{decoded_topic_name}'")
+    logger.debug(f"DEBUG: Original topic_name: '{topic_name}', decoded: '{decoded_topic_name}'")
 
     from ..repositories.article_repository import ArticleRepository
     from ..domain.article import ArticleStatus
@@ -147,7 +149,7 @@ async def generate_outline(
     topic_repo = TopicRepository(db)
     article_repo = ArticleRepository(db)
     topic = topic_repo.get_or_create(decoded_topic_name)
-    print(f"DEBUG: Created/found topic: {topic.name} (id: {topic.id})")
+    logger.debug(f"DEBUG: Created/found topic: {topic.name} (id: {topic.id})")
 
     # Check if outline already exists
     existing_articles = article_repo.get_all_by_topic(topic.id)
@@ -161,10 +163,10 @@ async def generate_outline(
         # Start outline generation in background
         async def generate_outline_in_background():
             try:
-                print(f"Starting outline generation for topic: {decoded_topic_name}")
+                logger.info(f"Starting outline generation for topic: {decoded_topic_name}")
                 outline_text = await llm.generate_outline(decoded_topic_name)
-                print(f"Outline generated, length: {len(outline_text)} characters")
-                print(f"Outline content preview: '{outline_text[:200]}...'")
+                logger.info(f"Outline generated, length: {len(outline_text)} characters")
+                logger.info(f"Outline content preview: '{outline_text[:200]}...'")
 
                 # Парсинг outline в список заголовков (оставляем как есть от DeepSeek)
                 lines = outline_text.strip().split("\n")
@@ -175,21 +177,20 @@ async def generate_outline(
                     if line.startswith("**") and line.endswith("**"):
                         title = line.strip("*")
                         titles.append(title)
-                        print(f"Found title: '{title}'")
+                        logger.info(f"Found title: '{title}'")
 
-                print(f"Parsed {len(titles)} titles for topic: {decoded_topic_name}")
+                logger.info(f"Parsed {len(titles)} titles for topic: {decoded_topic_name}")
 
                 # Save outline to database
                 for i, title in enumerate(titles):
                     status = ArticleStatus.READY if i > 0 else ArticleStatus.READY  # All titles are ready
                     article_repo.create(topic.id, title)
-                    print(f"Saved title {i+1}: '{title}'")
+                    logger.info(f"Saved title {i+1}: '{title}'")
 
-                print(f"Outline generation completed for topic: {decoded_topic_name}, saved {len(titles)} titles")
+                logger.info(f"Outline generation completed for topic: {decoded_topic_name}, saved {len(titles)} titles")
             except Exception as e:
-                print(f"Error in outline background generation: {type(e).__name__}: {str(e)}")
-                import traceback
-                traceback.print_exc()
+                logger.error(f"Error in outline background generation: {type(e).__name__}: {str(e)}")
+                logger.exception("Unhandled exception")
 
         # Add background task
         background_tasks.add_task(generate_outline_in_background)
@@ -253,7 +254,7 @@ async def generate_topic_step_article(
         # Start generation in background
         async def generate_in_background():
             try:
-                print(f"Starting article generation for: {step_title}")
+                logger.info(f"Starting article generation for: {step_title}")
                 # Generate article content with real streaming
                 content_parts = []
                 chunk_count = 0
@@ -262,7 +263,7 @@ async def generate_topic_step_article(
                     if chunk:  # Only add non-empty chunks
                         content_parts.append(chunk)
                         chunk_count += 1
-                        print(f"Received chunk {chunk_count}: '{chunk[:50]}...' (len: {len(chunk)})")
+                        logger.info(f"Received chunk {chunk_count}: '{chunk[:50]}...' (len: {len(chunk)})")
 
                         # Minimal intermediate saves for streaming (every 200 chunks to minimize DB load)
                         if chunk_count % 200 == 0:
@@ -270,30 +271,29 @@ async def generate_topic_step_article(
                             article_repo.update_content(article.id, partial_content)
                             article.version = chunk_count
                             db.commit()
-                            print(f"Streaming update: {len(partial_content)} characters, version: {chunk_count}")
+                            logger.info(f"Streaming update: {len(partial_content)} characters, version: {chunk_count}")
 
                 # Check if we got any content at all
                 if not content_parts:
-                    print("ERROR: No content parts received!")
+                    logger.error("ERROR: No content parts received!")
                     article_repo.update_status(article.id, "error")
                     return
 
                 # Final update with complete content (only final save to DB)
                 content = ''.join(content_parts)
-                print(f"Final content assembled, total length: {len(content)}")
-                print(f"Content preview: '{content[-200:]}...'")  # Show end of content
-                print(f"Last chunk was: '{chunk}'")
+                logger.info(f"Final content assembled, total length: {len(content)}")
+                logger.debug(f"Content preview: '{content[-200:]}...'")
+                logger.info(f"Last chunk was: '{chunk}'")
 
                 article_repo.update_content(article.id, content)
                 article_repo.update_status(article.id, ArticleStatus.READY)
                 # Final version update
                 article.version = chunk_count + 1  # Ensure final version is higher
                 db.commit()
-                print(f"Article generation completed, final length: {len(content)} characters, total chunks: {chunk_count}, final version: {chunk_count + 1}")
+                logger.info(f"Article generation completed, final length: {len(content)} characters, total chunks: {chunk_count}, final version: {chunk_count + 1}")
             except Exception as e:
-                print(f"Error in background generation: {type(e).__name__}: {str(e)}")
-                import traceback
-                traceback.print_exc()
+                logger.error(f"Error in background generation: {type(e).__name__}: {str(e)}")
+                logger.exception("Unhandled exception")
                 article_repo.update_status(article.id, "error")
 
         # Add background task - this will run after response is sent

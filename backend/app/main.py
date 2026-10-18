@@ -3,6 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api import topics, articles
 from .websocket import router as websocket_router
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+
 app = FastAPI(title="Kursovik API", version="0.1.0")
 
 # CORS middleware

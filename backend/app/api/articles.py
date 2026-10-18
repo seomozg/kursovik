@@ -38,9 +38,9 @@ async def generate_article(
     article_repo = ArticleRepository(db)
     topic_repo = TopicRepository(db)
 
-    topic = topic_repo.get_by_name("")  # TODO: Get topic by id, but for now assume
-    # For simplicity, assume topic exists or create dummy
-    topic = type('Topic', (), {'name': 'python'})()  # Mock topic
+    topic = topic_repo.get_by_id(topic_id)
+    if topic is None:
+        raise HTTPException(status_code=404, detail="Topic not found")
 
     article = article_repo.get_by_topic_and_title(topic_id, title)
     if article:

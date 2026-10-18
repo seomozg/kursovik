@@ -9,6 +9,9 @@ class TopicRepository:
     def get_by_name(self, name: str) -> Topic | None:
         return self.session.query(Topic).filter(Topic.name == name).first()
 
+    def get_by_id(self, topic_id: int) -> Topic | None:
+        return self.session.query(Topic).filter(Topic.id == topic_id).first()
+
     def create(self, name: str) -> Topic:
         topic = Topic(name=name)
         self.session.add(topic)

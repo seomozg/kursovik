@@ -2,6 +2,8 @@ import asyncio
 from typing import AsyncGenerator
 from .deepseek_utils import get_deepseek_response
 from ..config import STREAMING_DELAY_SECONDS, AI_MAX_TOKENS, HINT_MAX_TOKENS, AI_TEMPERATURE, OUTLINE_PROMPT_TEMPLATE, ARTICLE_PROMPT_TEMPLATE, HINT_PROMPT_TEMPLATE
+import logging
+logger = logging.getLogger(__name__)
 
 
 class LLMService:
@@ -46,7 +48,7 @@ class LLMService:
             yield chunk
 
     async def _generate(self, prompt: str) -> str:
-        print(f"DEBUG: Calling DeepSeek API with prompt: {prompt[:50]}...")
+        logger.debug(f"DEBUG: Calling DeepSeek API with prompt: {prompt[:50]}...")
 
         # Use real DeepSeek API via thread pool
         try:
@@ -58,10 +60,10 @@ class LLMService:
                 temperature=AI_TEMPERATURE,
                 stream=False
             )
-            print(f"DEBUG: API response: {result[:100]}...")
+            logger.debug(f"DEBUG: API response: {result[:100]}...")
             return result
         except Exception as e:
-            print(f"DEBUG: API call failed: {type(e).__name__}: {e}")
+            logger.debug(f"DEBUG: API call failed: {type(e).__name__}: {e}")
             raise
 
     async def _generate_stream(self, prompt: str, max_tokens: int = AI_MAX_TOKENS) -> AsyncGenerator[str, None]:
@@ -84,5 +86,5 @@ class LLMService:
                 # Add configurable delay for streaming experience
                 await asyncio.sleep(STREAMING_DELAY_SECONDS)
         except Exception as e:
-            print(f"DEBUG: Streaming failed: {type(e).__name__}: {e}")
+            logger.debug(f"DEBUG: Streaming failed: {type(e).__name__}: {e}")
             yield f"Ошибка стриминга: {str(e)}"

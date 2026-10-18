@@ -160,10 +160,20 @@ class TestTopicsAPI:
         topic = topic_repo.get_or_create("status_test")
         article = article_repo.create(topic.id, "Status Test Article")
 
-        # Initially should be ready (for outline articles)
-        assert article.status == ArticleStatus.READY
+        # A freshly created article has not been generated yet
+        assert article.status == ArticleStatus.NOT_STARTED
 
-        # Test status update
+        # NOT_STARTED -> GENERATING
+        article_repo.update_status(article.id, ArticleStatus.GENERATING)
+        db.refresh(article)
+        assert article.status == ArticleStatus.GENERATING
+
+        # GENERATING -> READY
         article_repo.update_status(article.id, ArticleStatus.READY)
         db.refresh(article)
         assert article.status == ArticleStatus.READY
+
+        # READY -> FAILED (generation error path)
+        article_repo.update_status(article.id, ArticleStatus.FAILED)
+        db.refresh(article)
+        assert article.status == ArticleStatus.FAILED

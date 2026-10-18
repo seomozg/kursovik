@@ -26,3 +26,15 @@ def test_get_or_create_existing(db_session):
     topic1 = repo.create("python")
     topic2 = repo.get_or_create("python")
     assert topic1.id == topic2.id
+
+def test_get_by_id_found(db_session):
+    repo = TopicRepository(db_session)
+    created = repo.create("go")
+    found = repo.get_by_id(created.id)
+    assert found is not None
+    assert found.name == "go"
+
+
+def test_get_by_id_not_found(db_session):
+    repo = TopicRepository(db_session)
+    assert repo.get_by_id(999999) is None

@@ -9,6 +9,8 @@ from .domain.article import Article, ArticleStatus
 import json
 import urllib.parse
 import base64
+import logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -89,7 +91,7 @@ async def websocket_article_stream(
 
                 if is_outline:
                     # Generate outline
-                    print(f"Starting WebSocket outline generation for: {decoded_topic_name}")
+                    logger.info(f"Starting WebSocket outline generation for: {decoded_topic_name}")
                     async for chunk in llm.generate_outline_stream(decoded_topic_name):
                         if chunk:
                             content_parts.append(chunk)
@@ -128,14 +130,14 @@ async def websocket_article_stream(
                         if line.startswith("**") and line.endswith("**"):
                             title = line.strip("*")
                             titles.append(title)
-                            print(f"Found title: '{title}'")
+                            logger.info(f"Found title: '{title}'")
 
-                    print(f"Parsed {len(titles)} titles for topic: {decoded_topic_name}")
+                    logger.info(f"Parsed {len(titles)} titles for topic: {decoded_topic_name}")
 
                     # Save outline titles to database
                     for i, title in enumerate(titles):
                         article_repo.create(topic_obj.id, title)
-                        print(f"Saved title {i+1}: '{title}'")
+                        logger.info(f"Saved title {i+1}: '{title}'")
 
                     # Remove temporary outline article
                     try:
@@ -146,9 +148,9 @@ async def websocket_article_stream(
                         if temp_article:
                             db.delete(temp_article)
                             db.commit()
-                            print("Removed temporary outline article")
+                            logger.info("Removed temporary outline article")
                     except Exception as e:
-                        print(f"Error removing temp article: {e}")
+                        logger.error(f"Error removing temp article: {e}")
 
                     await websocket.send_json({
                         "status": "ready",
@@ -184,9 +186,9 @@ async def websocket_article_stream(
         await generate_with_websocket()
 
     except WebSocketDisconnect:
-        print("WebSocket disconnected")
+        logger.info("WebSocket disconnected")
     except Exception as e:
-        print(f"WebSocket error: {type(e).__name__}: {str(e)}")
+        logger.error(f"WebSocket error: {type(e).__name__}: {str(e)}")
         try:
             await websocket.send_json({"error": str(e)})
         except:

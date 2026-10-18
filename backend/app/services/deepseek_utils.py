@@ -7,6 +7,8 @@ import requests
 import json
 from typing import Optional, Union, Iterator
 import json
+import logging
+logger = logging.getLogger(__name__)
 
 
 def get_deepseek_response(
@@ -65,7 +67,7 @@ def get_deepseek_response(
                 return result["choices"][0]["message"]["content"].strip()
         else:
             error_msg = f"Ошибка API DeepSeek: {response.status_code} - {response.text}"
-            print(f"DEBUG: DeepSeek API error: {error_msg}")
+            logger.debug(f"DEBUG: DeepSeek API error: {error_msg}")
             if stream:
                 # Для потокового режима возвращаем генератор с ошибкой
                 def error_generator():
