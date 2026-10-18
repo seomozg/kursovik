@@ -54,6 +54,9 @@ jobs:
 
       - name: Run tests
         run: pytest -q
+        env:
+          # Tests mock all LLM calls; key is only a DI placeholder
+          DEEPSEEK_API_KEY: ci-dummy-key
 
   frontend-checks:
     name: Frontend / vitest + build
