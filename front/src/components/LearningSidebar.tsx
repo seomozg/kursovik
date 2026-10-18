@@ -24,7 +24,7 @@ export interface Level {
 interface LearningSidebarProps {
   levels: Level[];
   selectedTopicId: string | null;
-  onSelectTopic: (levelId: string, topicId: string) => void;
+  onSelectTopic: (levelId: string, topicId: string, topicTitle: string) => void;
   courseName: string;
   articleHierarchy?: Record<string, string[]>;
   collapsedSections?: Set<string>;
@@ -61,8 +61,16 @@ const LearningSidebar = ({
     }
   };
 
-  // Render outline items with hierarchy
-  const renderTopicWithHierarchy = (topicTitle: string, levelId: string, topicId: string, level = 0) => {
+  // Render outline items with hierarchy (with cycle protection and max depth)
+  const MAX_HIERARCHY_DEPTH = 5;
+
+  const renderTopicWithHierarchy = (topicTitle: string, levelId: string, topicId: string, level = 0, visited: Set<string> = new Set()) => {
+    // Guard against infinite recursion: max depth and cycle detection
+    if (level > MAX_HIERARCHY_DEPTH || visited.has(topicTitle)) {
+      return null;
+    }
+    visited.add(topicTitle);
+
     const hasChildren = articleHierarchy[topicTitle] && articleHierarchy[topicTitle].length > 0;
     const isCollapsed = localCollapsedSections.has(topicTitle);
     const isSelected = selectedTopicId === topicId;
@@ -93,7 +101,7 @@ const LearningSidebar = ({
           {!hasChildren && <div className="w-6 flex-shrink-0" />}
           
           <button
-            onClick={() => onSelectTopic(levelId, topicId)}
+            onClick={() => onSelectTopic(levelId, topicId, topicTitle)}
             className={cn(
               "flex-1 flex items-center gap-2 px-2 py-1.5 rounded text-left transition-all duration-200 text-sm",
               isSelected
@@ -115,7 +123,7 @@ const LearningSidebar = ({
         {hasChildren && !isCollapsed && (
           <div>
             {articleHierarchy[topicTitle].map((child) => 
-              renderTopicWithHierarchy(child, levelId, `${topicId}-${child}`, level + 1)
+              renderTopicWithHierarchy(child, levelId, `${topicId}-${child}`, level + 1, new Set(visited))
             )}
           </div>
         )}

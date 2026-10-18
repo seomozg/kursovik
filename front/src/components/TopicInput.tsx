@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Sparkles, ArrowRight, Zap } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 
@@ -26,7 +26,7 @@ const TopicInput = ({ onGenerate, isGenerating, onTopicSelect }: TopicInputProps
 
         // Always use relative URLs for production (nginx proxies)
         // Only use direct URLs for localhost development
-        const url = isLocalhost ? 'http://localhost:8000' : '';
+        const url = isLocalhost ? 'http://localhost:8082' : '';
 
         const response = await axios.get(`${url}/api/topics/`, {
           timeout: 5000,
@@ -72,10 +72,6 @@ const TopicInput = ({ onGenerate, isGenerating, onTopicSelect }: TopicInputProps
     <div className="w-full max-w-2xl mx-auto space-y-8 animate-fade-in">
       {/* Hero Text */}
       <div className="text-center space-y-4">
-{/*         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-subtle text-sm text-muted-foreground mb-4">
-          <Zap className="w-4 h-4 text-primary" />
-          ИИ-генератор учебных материалов
-        </div> */}
         <h2 className="text-4xl md:text-5xl font-bold text-gradient leading-tight">
           Освойте любой навык
           <br />

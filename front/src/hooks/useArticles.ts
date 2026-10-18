@@ -5,7 +5,7 @@ import axios from 'axios';
 // Always use relative URLs - nginx proxies /api/ and /ws/ to backend
 // Only use direct URLs for localhost development
 const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-const BACKEND_URL = isLocalhost ? 'http://localhost:8000' : '';
+const BACKEND_URL = isLocalhost ? 'http://localhost:8082' : '';
 const ARTICLE_GENERATION_TIMEOUT_MS = 300000; // 5 minutes
 const OUTLINE_GENERATION_TIMEOUT_MS = 30000; // 30 seconds
 
@@ -42,7 +42,7 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
       const isLocalhost = window.location.hostname === 'localhost';
       let wsUrl: string;
       if (isLocalhost) {
-        wsUrl = `ws://localhost:8000/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
+        wsUrl = `ws://localhost:8082/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
       } else {
         // Production: use relative WebSocket URL (nginx will proxy)
         wsUrl = `/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
@@ -51,7 +51,6 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.log('WebSocket outline connected');
       };
 
       ws.onmessage = (event) => {
@@ -67,7 +66,6 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
             return;
           }
 
-          console.log('Outline WebSocket message:', { status: data.status, contentLength: data.content?.length || 0 });
 
           if (data.status === 'generating') {
             let content = data.content || '';
@@ -112,7 +110,6 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
               addTopic(topic);
             }
 
-            console.log('Outline generation completed, titles:', data.titles.length);
             ws.close();
           }
         } catch (error) {
@@ -128,7 +125,6 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
       };
 
       ws.onclose = () => {
-        console.log('WebSocket outline closed');
       };
 
       setTimeout(() => {
@@ -243,7 +239,7 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
       const isLocalhost = window.location.hostname === 'localhost';
       let wsUrl: string;
       if (isLocalhost) {
-        wsUrl = `ws://localhost:8000/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
+        wsUrl = `ws://localhost:8082/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
       } else {
         // Production: use relative WebSocket URL (nginx will proxy)
         wsUrl = `/ws/generate-article?topic=${encodedTopic}&title=${encodedTitle}`;
@@ -252,7 +248,6 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.log('WebSocket connected for article streaming');
       };
 
       ws.onmessage = (event) => {
@@ -298,7 +293,6 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
           });
 
           if (data.status === 'ready') {
-            console.log('Article completed! Full content length:', data.content?.length || data.content_b64?.length);
             setLoading(false);
             setStreaming(false);
             setGeneratedArticles(prev => new Set([...prev, stepTitle]));
@@ -313,7 +307,6 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
             }
 
             if (subHeaders.length > 0) {
-              console.log('Found sub-headers:', subHeaders);
               setArticleHierarchy(prev => ({
                 ...prev,
                 [stepTitle]: subHeaders
@@ -324,7 +317,6 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
           }
         } catch (parseError) {
           console.error('Error parsing WebSocket message:', parseError);
-          console.log('Raw message data:', event.data);
         }
       };
 
@@ -336,7 +328,6 @@ export const useArticles = (addTopic?: (topicName: string) => void) => {
       };
 
       ws.onclose = () => {
-        console.log('WebSocket closed');
       };
 
       setTimeout(() => {

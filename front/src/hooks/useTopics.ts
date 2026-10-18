@@ -20,16 +20,14 @@ export const useTopics = () => {
 
         // Always use relative URLs for production (nginx proxies)
         // Only use direct URLs for localhost development
-        const url = isLocalhost ? 'http://localhost:8000' : '';
+        const url = isLocalhost ? 'http://localhost:8082' : '';
 
-        console.log('Loading topics from:', `${url}/api/topics/`);
         const response = await axios.get(`${url}/api/topics/`, {
           timeout: 5000,
           headers: {
             'Content-Type': 'application/json'
           }
         });
-        console.log('Topics loaded:', response.data);
         const topics = response.data.map((t: { name: string }) => t.name);
         setAvailableTopics(topics);
       } catch (error) {
@@ -38,7 +36,7 @@ export const useTopics = () => {
           if (error.response) {
             errorMsg = `Server error: ${error.response.status}`;
           } else if (error.request) {
-            errorMsg = 'No response from server - check if backend is running on port 8000';
+            errorMsg = 'No response from server - check if backend is running on port 8082';
           } else {
             errorMsg = error.message;
           }

@@ -23,7 +23,6 @@ export const useHints = () => {
       const currentTopic = topicName || 'программирование';
       const hintQuery = `Объясни в контексте темы "${currentTopic}": ${selectedText}`;
 
-      console.log('Generating hint for:', hintQuery);
 
       const encodedTopic = encodeURIComponent(currentTopic);
       const encodedTitle = encodeURIComponent(`__HINT__${selectedText}__`);
@@ -41,7 +40,6 @@ export const useHints = () => {
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.log('WebSocket connected for hint generation');
       };
 
       ws.onmessage = (event) => {
@@ -80,7 +78,6 @@ export const useHints = () => {
           setHintContent(content);
 
           if (data.status === 'ready') {
-            console.log('Hint completed! Length:', content.length);
             setHintStreaming(false);
             ws.close();
           }
@@ -98,7 +95,6 @@ export const useHints = () => {
       };
 
       ws.onclose = () => {
-        console.log('Hint WebSocket closed');
         setHintStreaming(false);
       };
 

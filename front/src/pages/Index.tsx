@@ -87,26 +87,7 @@ const Index = () => {
     await handleGenerateOutline(normalizedInput);
   };
 
-  const handleSelectTopic = async (levelId: string, topicId: string) => {
-    // Extract topic name from topicId
-    // topicId format: "topic-0" for main items or "topic-0-Sub Title" for nested items
-    let topicTitle = '';
-    
-    const parts = topicId.split('-');
-    if (parts.length >= 2 && !isNaN(parseInt(parts[1]))) {
-      // Standard format: topic-INDEX or topic-INDEX-SubTitle
-      const topicIndex = parseInt(parts[1]);
-      
-      if (parts.length > 2) {
-        // Nested item: rejoin the remaining parts as the title
-        topicTitle = parts.slice(2).join('-');
-      } else {
-        // Main item: get from outline array
-        topicTitle = outline[topicIndex] || '';
-      }
-    }
-
-    console.log('handleSelectTopic called with:', { levelId, topicId, topicTitle, outline, selectedTopicName });
+  const handleSelectTopic = async (levelId: string, topicId: string, topicTitle: string) => {
     
     if (topicTitle && selectedTopicName) {
       setSelectedArticleTitle(topicTitle); // Update selected article
@@ -168,7 +149,7 @@ const Index = () => {
 
   const getAllTopics = useCallback(() => {
     return levels.flatMap(level => 
-      level.topics.map(topic => ({ levelId: level.id, topicId: topic.id }))
+      level.topics.map(topic => ({ levelId: level.id, topicId: topic.id, topicTitle: topic.title }))
     );
   }, [levels]);
 
@@ -180,7 +161,7 @@ const Index = () => {
     const allTopics = getAllTopics();
     if (currentIndex < allTopics.length - 1) {
       const next = allTopics[currentIndex + 1];
-      handleSelectTopic(next.levelId, next.topicId);
+      handleSelectTopic(next.levelId, next.topicId, next.topicTitle);
     }
   };
 
@@ -188,7 +169,7 @@ const Index = () => {
     const allTopics = getAllTopics();
     if (currentIndex > 0) {
       const prev = allTopics[currentIndex - 1];
-      handleSelectTopic(prev.levelId, prev.topicId);
+      handleSelectTopic(prev.levelId, prev.topicId, prev.topicTitle);
     }
   };
 
