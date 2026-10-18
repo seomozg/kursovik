@@ -1,4 +1,6 @@
-# Kursovik 🚀  
+# Kursovik 🚀
+
+[![CI](https://github.com/seomozg/kursovik/actions/workflows/ci.yml/badge.svg)](https://github.com/seomozg/kursovik/actions/workflows/ci.yml)  
 AI-сервис генерации учебных материалов на любую тему
 
 ## 📌 Описание
