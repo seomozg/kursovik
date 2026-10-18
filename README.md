@@ -10,6 +10,19 @@ AI-сервис генерации учебных материалов на лю
 
 ---
 
+## 🧰 Стек технологий
+
+| Слой | Технологии |
+|------|-----------|
+| Бэкенд | Python 3.12, FastAPI, SQLAlchemy 2, Alembic |
+| БД | PostgreSQL (production), SQLite (разработка) |
+| Кеш и блокировки | Redis |
+| Фронтенд | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui |
+| Стриминг | WebSocket, Server-Sent Events |
+| Инфраструктура | Docker, Docker Compose, Nginx (реверс-прокси + SSL) |
+
+---
+
 ## 🧠 Общая концепция
 
 1. Пользователь вводит тему (например, `python`)
@@ -149,32 +162,28 @@ python
 
 ---
 
-## 🏗 Архитектура (предлагаемая)
+## 🏗 Архитектура
 
 ```
 kursovik/
-├── backend/
+├── backend/                # FastAPI, Python 3.12
 │   ├── app/
-│   │   ├── api/
-│   │   ├── services/
-│   │   │   ├── llm_service.py
-│   │   │   ├── streaming_parser.py
-│   │   │   ├── lock_service.py
-│   │   ├── domain/
-│   │   │   ├── topic.py
-│   │   │   └── article.py
-│   │   ├── repositories/
-│   │   └── main.py
-│   ├── tests/
+│   │   ├── api/            # HTTP-эндпоинты (topics, articles)
+│   │   ├── websocket.py    # Стриминговая генерация статей (WebSocket)
+│   │   ├── services/       # LLM-сервис, блокировки, парсинг стрима
+│   │   ├── repositories/   # Доступ к данным (SQLAlchemy)
+│   │   ├── domain/         # Модели Topic, Article
+│   │   └── main.py         # Точка входа, роуты, /health, /metrics
+│   ├── alembic/            # Миграции схемы БД
+│   ├── tests/              # pytest: 37 тестов (unit + API)
 │   └── pyproject.toml
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   └── stores/
-│   ├── tests/
-│   └── package.json
-├── .gitignore
+├── front/                  # React 18 + TypeScript + Vite
+│   └── src/
+│       ├── pages/          # Страницы приложения
+│       ├── components/     # UI-компоненты (shadcn/ui + Tailwind)
+│       └── hooks/          # useTopics, useArticles, useHints
+├── docker-compose.yml      # Окружение разработки
+├── docker-compose.prod.yml # Production-конфигурация
 └── README.md
 ```
 
@@ -349,7 +358,7 @@ docker-compose down -v
 - **Логи**: Централизованное логирование через Docker
 - **Метрики**: Доступны через `/metrics` endpoint (backend)
 
-### Production deployment
+### Production-развертывание
 
 Для развертывания на сервере:
 
@@ -398,9 +407,15 @@ docker-compose down -v
 
 ---
 
-## 🐳 Docker
+## 🐳 Docker и инфраструктура
 
-⚠️ Используется **только в production**.
+⚠️ Docker используется **только в production**; в разработке достаточно SQLite + Vite dev-сервера.
+
+Состав production-развертываемого на сервере:
+
+- **Nginx** — реверс-прокси с SSL (Let's Encrypt/certbot), проксирует API и WebSocket;
+- **docker-compose.prod.yml** — backend, frontend, PostgreSQL, Redis;
+- **локальный DNS-резолвер** (dnsmasq + фоновый пробник соединения): DNS-ответ для LLM API всегда указывает на проверенный живой адрес; при деградации маршрута адрес автоматически подменяется. Генерация текстов при этом не зависит от сетевой нестабильности.
 
 ---
 
