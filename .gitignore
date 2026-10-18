@@ -238,3 +238,5 @@ temp/
 # Logs
 logs
 *.log
+# Local dev database
+*.db
